@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - DataClub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'red-custom': '#F05454',
+                        'gray-custom': '#F5F5F5',
+                        'slate-custom': '#30475E',
+                        'black-custom': '#121212',
+                        'brand-red': '#F05454',
+                        'brand-slate': '#30475E',
+                        'brand-gray': '#F5F5F5',
+                        'brand-dark': '#121212'
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-custom">
+    <!-- Navigation -->
+    <header class="bg-white py-4 px-6">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <!-- Logo -->
+            <div class="flex items-center space-x-3">
+                <img src="mds logo.png" alt="MDS Logo" class="w-40 h-30 object-contain">
+            </div>
+
+            <!-- Navigation -->
+            <nav class="hidden md:flex items-center space-x-8">
+                <a href="home.html" class="text-brand-dark hover:text-brand-red transition-colors">Home Page</a>
+                <a href="events.html" class="text-brand-dark hover:text-brand-red transition-colors">Events</a>
+                <a href="clubs.html" class="text-brand-dark hover:text-brand-red transition-colors">Clubs</a>
+                <a href="contactus.html" class="text-brand-dark hover:text-brand-red transition-colors">Contact us</a>
+                    <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <button id="profile-menu-button" class="flex items-center space-x-2 text-gray-600 hover:text-slate-custom transition-colors">
+                            <div class="w-8 h-8 bg-gradient-to-br from-slate-custom to-slate-700 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                TM
+                            </div>
+                            <span class="text-sm font-medium">Tanani Mouhsin</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Profile Header -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+            <div class="relative bg-gradient-to-r from-slate-custom to-slate-700 h-32">
+                <div class="absolute -bottom-16 left-8">
+                    <div class="relative">
+                        <div class="w-32 h-32 bg-white rounded-full p-2 shadow-lg">
+                            <div class="w-full h-full bg-gradient-to-br from-slate-custom to-slate-700 rounded-full flex items-center justify-center text-white font-bold text-4xl">
+                                TM
+                            </div>
+                        </div>
+                        <button class="absolute bottom-2 right-2 w-8 h-8 bg-red-custom text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors">
+                            <i class="fas fa-camera text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="pt-20 pb-6 px-8">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                    <div class="mb-4 lg:mb-0">
+                        <h1 class="text-3xl font-bold text-black-custom mb-2">Tanani mouhsin</h1>
+                        <p class="text-gray-600 mb-2">tananimouhsin@gmail.com</p>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <i class="fas fa-calendar mr-2"></i>
+                            Member since January 2023
+                        </div>
+                    </div>
+                    <button id="edit-profile-btn" class="bg-slate-custom text-white px-6 py-3 rounded-lg font-medium hover:bg-slate-700 transition-colors">
+                        <i class="fas fa-edit mr-2"></i>
+                        Edit Profile
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column - Profile Details -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- Personal Information -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-xl font-bold text-black-custom mb-4">Personal Information</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                            <input type="text" value="Mouhsin" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                            <input type="text" value="Tanani" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" value="tananimouhsin@gmail.com" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                            <input type="password" value="••••••••" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clubs I'm Part Of -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-xl font-bold text-black-custom mb-4">Clubs I'm Part Of</h2>
+                    <div class="space-y-3">
+                        <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg">
+                            <div class="w-12 h-12 bg-gradient-to-br from-slate-custom to-slate-700 rounded-lg flex items-center justify-center text-white font-bold">
+                                DS
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="font-medium text-black-custom">Data Science Casablanca</h3>
+                                <p class="text-sm text-gray-500">Member since Feb 2023</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg">
+                            <div class="w-12 h-12 bg-gradient-to-br from-slate-custom to-slate-700 rounded-lg flex items-center justify-center text-white font-bold">
+                                ML
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="font-medium text-black-custom">ML Research Group</h3>
+                                <p class="text-sm text-gray-500">Member since Mar 2023</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Club Information & Events -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- My Club Section -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="bg-gradient-to-r from-slate-custom to-slate-700 text-white p-6">
+                        <h2 class="text-2xl font-bold mb-2">My Club</h2>
+                        <p class="opacity-90">Your current club leadership and activities</p>
+                    </div>
+                    
+                    <div class="p-6">
+                        <div class="flex items-start space-x-6 mb-6">
+                            <div class="w-20 h-20 bg-gradient-to-br from-slate-custom to-slate-700 rounded-xl flex items-center justify-center text-white font-bold text-2xl">
+                                AI
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-2xl font-bold text-black-custom mb-2">AI Innovation Lab</h3>
+                                <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-3">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-graduation-cap mr-2"></i>
+                                        Mohammed V University
+                                    </div>
+                                    <div class="flex items-center">
+                                        <i class="fas fa-map-marker-alt mr-2"></i>
+                                        Rabat
+                                    </div>
+                                    <div class="flex items-center">
+                                        <i class="fas fa-users mr-2"></i>
+                                        85 members
+                                    </div>
+                                </div>
+                                <p class="text-gray-600 mb-4">Leading AI research and development initiatives across Morocco. We focus on machine learning, deep learning, and AI applications in various industries.</p>
+                                <div class="flex items-center space-x-3">
+                                    <span class="px-3 py-1 bg-red-100 text-red-custom rounded-full text-sm font-medium">President</span>
+                                    <span class="px-3 py-1 bg-slate-100 text-slate-custom rounded-full text-sm font-medium">Since Jan 2023</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div class="bg-slate-50 rounded-lg p-4 text-center">
+                                <div class="text-2xl font-bold text-slate-custom">15</div>
+                                <div class="text-sm text-gray-600">Events Organized</div>
+                            </div>
+                            <div class="bg-red-50 rounded-lg p-4 text-center">
+                                <div class="text-2xl font-bold text-red-custom">450+</div>
+                                <div class="text-sm text-gray-600">Total Attendees</div>
+                            </div>
+                            <div class="bg-slate-50 rounded-lg p-4 text-center">
+                                <div class="text-2xl font-bold text-slate-custom">8</div>
+                                <div class="text-sm text-gray-600">Active Projects</div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-3">
+                            <a href="manage_club.html" class="bg-slate-custom text-white px-4 py-2 rounded-lg hover:bg-slate-700 transition-colors">
+                                <i class="fas fa-cog mr-2"></i>
+                                Manage Club
+                            </a>
+                            <a href="create_event.html" class="bg-red-custom text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">
+                                <i class="fas fa-plus mr-2"></i>
+                                Create Event
+                            </a>
+                            <button class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                <i class="fas fa-external-link-alt mr-2"></i>
+                                View Club Page
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Club Events -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-bold text-black-custom">My Club Events</h2>
+                        <button class="text-slate-custom hover:text-slate-700 text-sm font-medium">
+                            View All Events
+                            <i class="fas fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div class="flex items-start justify-between mb-3">
+                                <div>
+                                    <h3 class="font-bold text-black-custom mb-1">Machine Learning Workshop</h3>
+                                    <div class="flex items-center text-sm text-gray-600 space-x-4">
+                                        <div class="flex items-center">
+                                            <i class="fas fa-calendar mr-1"></i>
+                                            Feb 15, 2024
+                                        </div>
+                                        <div class="flex items-center">
+                                            <i class="fas fa-clock mr-1"></i>
+                                            14:00 - 17:00
+                                        </div>
+                                        <div class="flex items-center">
+                                            <i class="fas fa-users mr-1"></i>
+                                            42/50 registered
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="px-2 py-1 bg-slate-100 text-slate-custom text-xs rounded-full">Workshop</span>
+                            </div>
+                            <p class="text-gray-600 text-sm mb-3">Hands-on workshop covering the fundamentals of machine learning with Python and scikit-learn.</p>
+                            <div class="flex items-center justify-between">
+                                <div class="flex space-x-2">
+                                    <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">Machine Learning</span>
+                                    <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">Python</span>
+                                </div>
+                                <button class="text-slate-custom hover:text-slate-700 text-sm font-medium">
+                                    Manage Event
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div class="flex items-start justify-between mb-3">
+                                <div>
+                                    <h3 class="font-bold text-black-custom mb-1">AI Ethics Seminar</h3>
+                                    <div class="flex items-center text-sm text-gray-600 space-x-4">
+                                        <div class="flex items-center">
+                                            <i class="fas fa-calendar mr-1"></i>
+                                            Feb 22, 2024
+                                        </div>
+                                        <div class="flex items-center">
+                                            <i class="fas fa-clock mr-1"></i>
+                                            19:00 - 21:00
+                                        </div>
+                                        <div class="flex items-center">
+                                            <i class="fas fa-users mr-1"></i>
+                                            28/60 registered
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="px-2 py-1 bg-red-100 text-red-custom text-xs rounded-full">Seminar</span>
+                            </div>
+                            <p class="text-gray-600 text-sm mb-3">Panel discussion with experts discussing the ethical implications of AI and machine learning in society.</p>
+                            <div class="flex items-center justify-between">
+                                <div class="flex space-x-2">
+                                    <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">AI Ethics</span>
+                                    <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">Panel</span>
+                                </div>
+                                <button class="text-slate-custom hover:text-slate-700 text-sm font-medium">
+                                    Manage Event
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Create Club Invitation Section -->
+                <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-xl shadow-md overflow-hidden border border-red-200">
+                    <div class="p-8 text-center">
+                        <div class="w-16 h-16 bg-red-custom rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-plus text-white text-2xl"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-black-custom mb-3">Start Your Own Club</h2>
+                        <p class="text-gray-600 mb-6 max-w-md mx-auto">
+                            Have a passion for data science or AI? Create your own club and bring together like-minded students at your university.
+                        </p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div class="bg-white rounded-lg p-4">
+                                <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+                                    <i class="fas fa-lightbulb text-red-custom"></i>
+                                </div>
+                                <h3 class="font-medium text-black-custom mb-1">Share Ideas</h3>
+                                <p class="text-sm text-gray-600">Connect with students who share your interests</p>
+                            </div>
+                            <div class="bg-white rounded-lg p-4">
+                                <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+                                    <i class="fas fa-calendar-alt text-red-custom"></i>
+                                </div>
+                                <h3 class="font-medium text-black-custom mb-1">Organize Events</h3>
+                                <p class="text-sm text-gray-600">Host workshops, seminars, and competitions</p>
+                            </div>
+                            <div class="bg-white rounded-lg p-4">
+                                <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+                                    <i class="fas fa-trophy text-red-custom"></i>
+                                </div>
+                                <h3 class="font-medium text-black-custom mb-1">Build Impact</h3>
+                                <p class="text-sm text-gray-600">Make a difference in your university community</p>
+                            </div>
+                        </div>
+
+                        <button id="create-club-btn" class="bg-red-custom text-white px-8 py-3 rounded-lg font-medium hover:bg-red-600 transition-colors">
+                            <i class="fas fa-rocket mr-2"></i>
+                            Request Club Creation
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Edit Profile Modal -->
+    <div id="edit-profile-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold text-black-custom">Edit Profile</h2>
+                    <button id="close-edit-modal" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <form class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                        <input type="text" value="mouhsin" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                        <input type="text" value="tanani" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" value="tananimouhsin@gmail.com" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                        <input type="password" placeholder="Leave blank to keep current password" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom">
+                    </div>
+                    
+                    <div class="flex space-x-3 pt-4">
+                        <button type="submit" class="flex-1 bg-slate-custom text-white py-2 rounded-lg hover:bg-slate-700 transition-colors">
+                            Save Changes
+                        </button>
+                        <button type="button" id="cancel-edit" class="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Club Creation Form Modal -->
+    <div id="club-creation-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-black-custom">Request Club Creation</h2>
+                    <button id="close-club-modal" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <form class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Club Name *</label>
+                            <input type="text" placeholder="e.g., Data Science Club" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">School *</label>
+                            <input type="text" placeholder="e.g., Mohammed V University" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom" required>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">City *</label>
+                            <input type="text" placeholder="e.g., Rabat" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Expected Members</label>
+                            <input type="number" placeholder="e.g., 50" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Club Description *</label>
+                        <textarea rows="4" placeholder="Describe your club's mission, goals, and activities..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom" required></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Focus Areas *</label>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="mr-2 text-slate-custom focus:ring-slate-custom">
+                                <span class="text-sm">Machine Learning</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="mr-2 text-slate-custom focus:ring-slate-custom">
+                                <span class="text-sm">Data Science</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="mr-2 text-slate-custom focus:ring-slate-custom">
+                                <span class="text-sm">AI Research</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="mr-2 text-slate-custom focus:ring-slate-custom">
+                                <span class="text-sm">Web Development</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="mr-2 text-slate-custom focus:ring-slate-custom">
+                                <span class="text-sm">Cybersecurity</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="mr-2 text-slate-custom focus:ring-slate-custom">
+                                <span class="text-sm">Other</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Why do you want to start this club? *</label>
+                        <textarea rows="3" placeholder="Tell us about your motivation and vision..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom" required></textarea>
+                    </div>
+                    
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h3 class="font-medium text-black-custom mb-2">Contact Information</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                                <input type="tel" placeholder="+212 6XX XXX XXX" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Instagram Profile</label>
+                                <input type="url" placeholder="@username" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex space-x-3 pt-4">
+                        <button type="submit" class="flex-1 bg-red-custom text-white py-3 rounded-lg hover:bg-red-600 transition-colors font-medium">
+                            <i class="fas fa-paper-plane mr-2"></i>
+                            Submit Request
+                        </button>
+                        <button type="button" id="cancel-club" class="flex-1 border border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Modal functionality
+        const editProfileBtn = document.getElementById('edit-profile-btn');
+        const editProfileModal = document.getElementById('edit-profile-modal');
+        const closeEditModal = document.getElementById('close-edit-modal');
+        const cancelEdit = document.getElementById('cancel-edit');
+
+        const createClubBtn = document.getElementById('create-club-btn');
+        const clubCreationModal = document.getElementById('club-creation-modal');
+        const closeClubModal = document.getElementById('close-club-modal');
+        const cancelClub = document.getElementById('cancel-club');
+
+        // Edit Profile Modal
+        editProfileBtn.addEventListener('click', () => {
+            editProfileModal.classList.remove('hidden');
+        });
+
+        closeEditModal.addEventListener('click', () => {
+            editProfileModal.classList.add('hidden');
+        });
+
+        cancelEdit.addEventListener('click', () => {
+            editProfileModal.classList.add('hidden');
+        });
+
+        // Club Creation Modal
+        createClubBtn.addEventListener('click', () => {
+            clubCreationModal.classList.remove('hidden');
+        });
+
+        closeClubModal.addEventListener('click', () => {
+            clubCreationModal.classList.add('hidden');
+        });
+
+        cancelClub.addEventListener('click', () => {
+            clubCreationModal.classList.add('hidden');
+        });
+
+        // Close modals when clicking outside
+        editProfileModal.addEventListener('click', (e) => {
+            if (e.target === editProfileModal) {
+                editProfileModal.classList.add('hidden');
+            }
+        });
+
+        clubCreationModal.addEventListener('click', (e) => {
+            if (e.target === clubCreationModal) {
+                clubCreationModal.classList.add('hidden');
+            }
+        });
+
+        // Form submissions
+        document.querySelector('#edit-profile-modal form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('Profile updated successfully!');
+            editProfileModal.classList.add('hidden');
+        });
+
+        document.querySelector('#club-creation-modal form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('Club creation request submitted! We will review your application and get back to you within 3-5 business days.');
+            clubCreationModal.classList.add('hidden');
+        });
+    </script>
+</body>
+</html>
