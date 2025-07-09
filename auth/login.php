@@ -42,6 +42,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // Regenerate session ID for security
                         session_regenerate_id(true);
                         $_SESSION['user_id'] = $row['ID_ADMIN'];
+                        $_SESSION['first_name'] = $row['FIRST_NAME'] ;
+                        $_SESSION['last_name'] = $row['LAST_NAME'] ;
                         $_SESSION['privilege'] = 1;
                         $_SESSION['login_time'] = time();
                         $message = 'Admin login successful! Redirecting...';
@@ -68,13 +70,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 // Regenerate session ID for security
                                 session_regenerate_id(true);
                                 $_SESSION['user_id'] = $row2['ID_MEMBER'];
+                                $_SESSION['first_name'] = $row['FIRST_NAME'] ;
+                                $_SESSION['last_name'] = $row['LAST_NAME'] ;
                                 $_SESSION['privilege'] = 2;
                                 $_SESSION['login_time'] = time();
                                 $message = 'Member login successful! Redirecting...';
                                 $messageType = 'success';
                                 
                                 // Redirect to member dashboard
-                                header('Location: ../user/clubs.php');
+                                header('Location: ../user/home.php');
                                 exit();
                             } else {
                                 $message = 'Invalid password.';

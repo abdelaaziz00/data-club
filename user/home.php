@@ -1,3 +1,14 @@
+<?php
+session_start();
+require_once 'db.php';
+$user_id = $_SESSION['user_id'];
+
+$stmt = $pdo->prepare("SELECT * FROM member WHERE ID_MEMBER = ?");
+$stmt->execute([$user_id]);
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,7 +24,11 @@
                         'brand-red': '#F05454',
                         'brand-slate': '#30475E',
                         'brand-gray': '#F5F5F5',
-                        'brand-dark': '#121212'
+                        'brand-dark': '#121212',
+                                                'red-custom': '#F05454',
+                        'gray-custom': '#F5F5F5',
+                        'slate-custom': '#30475E',
+                        'black-custom': '#121212'
                     }
                 }
             }
@@ -23,7 +38,7 @@
 <body class="bg-brand-gray">
     <!-- Header -->
     <header class="bg-white py-4 px-6">
-        <div class="max-w-7xl mx-auto flex items-center justify-between">
+                <div class="max-w-7xl mx-auto flex items-center justify-between">
             <!-- Logo -->
             <div class="flex items-center space-x-3">
                 <img src="../static/images/mds logo.png" alt="MDS Logo" class="w-40 h-30 object-contain">
@@ -32,14 +47,22 @@
             <!-- Navigation -->
             <nav class="hidden md:flex items-center space-x-8">
                 <a href="home.html" class="text-brand-dark hover:text-brand-red transition-colors">Home Page</a>
-                <a href="events.php" class="text-brand-dark hover:text-brand-red transition-colors">Events</a>
-                <a href="clubs.php" class="text-brand-dark hover:text-brand-red transition-colors">Clubs</a>
+                <a href="events.html" class="text-brand-dark hover:text-brand-red transition-colors">Events</a>
+                <a href="clubs.html" class="text-brand-dark hover:text-brand-red transition-colors">Clubs</a>
                 <a href="contactus.html" class="text-brand-dark hover:text-brand-red transition-colors">Contact us</a>
-                <div class="flex space-x-2">
-                    <a  href="../auth/signup.php"class="bg-brand-slate text-white px-4 py-2 rounded-lg font-medium">Signup</a>
-                    <a  href="../auth/login.php"class="bg-brand-red text-white px-4 py-2 rounded-lg font-medium">Login</a>
+
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <button id="profile-menu-button" class="flex items-center space-x-2 text-gray-600 hover:text-slate-custom transition-colors">
+                            <div class="w-8 h-8 bg-gradient-to-br from-slate-custom to-slate-700 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                <?php echo strtoupper(substr($user['FIRST_NAME'], 0, 1) . substr($user['LAST_NAME'], 0, 1)); ?>
+                            </div>
+                            <span class="text-sm font-medium"><?php echo htmlspecialchars($user['FIRST_NAME'] . ' ' . $user['LAST_NAME']); ?></span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                    </div>
                 </div>
-            </nav>
+            </div>
         </div>
     </header>
 
@@ -55,8 +78,12 @@
                     Join DataClub and unlock your potential in AI and Data Science. Connect with like-minded peers and industry experts to enhance your skills and knowledge.
                 </p>
                 <div class="flex space-x-4">
-                    <a href="../auth/signup.php" class="bg-brand-red text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-600 transition-colors">Join Us</a>
-                    <a href="../auth/login.php" class="border border-brand-red text-brand-red px-6 py-3 rounded-lg font-semibold hover:bg-brand-red hover:text-white transition-colors">Learn More</a>
+                    <button class="bg-brand-red text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-600 transition-colors">
+                        Join Us
+                    </button>
+                    <button class="border border-brand-red text-brand-red px-6 py-3 rounded-lg font-semibold hover:bg-brand-red hover:text-white transition-colors">
+                        Learn More
+                    </button>
                 </div>
             </div>
 
@@ -78,13 +105,15 @@
                     DataClub is a vibrant community dedicated to empowering students and young professionals in the fields of AI and Data Science. Our goal is to foster collaboration, innovation, and skill development through engaging events and resources.
                 </p>
                 <div class="flex space-x-4">
-                    <a href="../auth/signup.php" class="border border-brand-slate text-brand-slate px-6 py-2 rounded-lg font-medium hover:bg-brand-slate hover:text-white transition-colors">Join</a>
-                    <a href="../auth/login.php" class="text-brand-slate font-medium flex items-center hover:text-brand-red transition-colors">
+                    <button class="border border-brand-slate text-brand-slate px-6 py-2 rounded-lg font-medium hover:bg-brand-slate hover:text-white transition-colors">
+                        Join
+                    </button>
+                    <button class="text-brand-slate font-medium flex items-center hover:text-brand-red transition-colors">
                         Learn
                         <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                         </svg>
-                    </a>
+                    </button>
                 </div>
             </div>
 
