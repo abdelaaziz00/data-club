@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Club - Events</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'red-custom': '#F05454',
+                        'gray-custom': '#F5F5F5',
+                        'slate-custom': '#30475E',
+                        'black-custom': '#121212',
+                        'brand-red': '#F05454',
+                        'brand-slate': '#30475E',
+                        'brand-gray': '#F5F5F5',
+                        'brand-dark': '#121212'
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-custom">
+    <!-- Navigation -->
+        <header class="bg-white py-4 px-6">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <!-- Logo -->
+            <div class="flex items-center space-x-3">
+                <img src="../static/images/mds logo.png" alt="MDS Logo" class="w-40 h-30 object-contain">
+            </div>
+
+            <!-- Navigation -->
+            <nav class="hidden md:flex items-center space-x-8">
+                <a href="home.html" class="text-brand-dark hover:text-brand-red transition-colors">Home Page</a>
+                <a href="events.html" class="text-brand-dark hover:text-brand-red transition-colors">Events</a>
+                <a href="clubs.html" class="text-brand-dark hover:text-brand-red transition-colors">Clubs</a>
+                <a href="contactus.html" class="text-brand-dark hover:text-brand-red transition-colors">Contact us</a>
+                <div class="flex space-x-2">
+                    <a  href="auth.html"class="bg-brand-slate text-white px-4 py-2 rounded-lg font-medium">Signup</a>
+                    <a  href="auth.html"class="bg-brand-red text-white px-4 py-2 rounded-lg font-medium">Login</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-black-custom mb-4">
+                Upcoming Data Science Events
+            </h1>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                Join workshops, conferences, and meetups to expand your knowledge, network with peers, 
+                and stay updated with the latest trends in data science and AI.
+            </p>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <div class="bg-white rounded-xl shadow-sm p-6 text-center">
+                <div class="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-calendar text-slate-custom text-xl"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-black-custom" id="total-events">6</h3>
+                <p class="text-gray-600">Upcoming Events</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-6 text-center">
+                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-map-marker-alt text-red-custom text-xl"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-black-custom" id="total-cities">6</h3>
+                <p class="text-gray-600">Cities</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-6 text-center">
+                <div class="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-filter text-slate-custom text-xl"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-black-custom" id="total-types">4</h3>
+                <p class="text-gray-600">Event Types</p>
+            </div>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 lg:space-x-4">
+                <!-- Search Bar -->
+                <div class="relative flex-1 max-w-md">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </div>
+                    <input
+                        type="text"
+                        id="search-input"
+                        placeholder="Search events..."
+                        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom focus:border-transparent"
+                    />
+                </div>
+
+                <!-- Filters -->
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                    <!-- City Filter -->
+                    <div class="relative">
+                        <select id="city-filter" class="w-full sm:w-40 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-slate-custom">
+                            <option value="">All Cities</option>
+                        </select>
+                    </div>
+
+                    <!-- Type Filter -->
+                    <div class="relative">
+                        <select id="type-filter" class="w-full sm:w-40 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-slate-custom">
+                            <option value="">All Types</option>
+                        </select>
+                    </div>
+
+                    <!-- Clear Filters -->
+                    <button id="clear-filters" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 hidden">
+                        Clear All
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Count -->
+        <div class="mb-6">
+            <p class="text-gray-600" id="results-count">
+                Showing 6 of 6 events
+            </p>
+        </div>
+
+        <!-- Event Cards -->
+        <div id="events-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Events will be populated by JavaScript -->
+        </div>
+
+        <!-- No Results -->
+        <div id="no-results" class="text-center py-12 hidden">
+            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-calendar text-gray-400 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-medium text-black-custom mb-2">No events found</h3>
+            <p class="text-gray-600">Try adjusting your search or filters to find more events.</p>
+        </div>
+    </main>
+
+        <footer class="bg-brand-red text-white py-12 px-6">
+        <div class="max-w-7xl mx-auto">
+            <!-- Logo and Links -->
+            <div class="flex flex-col items-center mb-8">
+                <div class="flex items-center space-x-3 mb-6">
+                    <img src="mds logo.png" alt="MDS Logo" class="w-40 h-30 object-contain">
+                </div>
+
+                <!-- Navigation Links -->
+                <div class="flex space-x-8 mb-6">
+                    <a href="#" class="text-white/80 hover:text-white transition-colors">Home Page</a>
+                    <a href="#" class="text-white/80 hover:text-white transition-colors">Events List</a>
+                    <a href="#" class="text-white/80 hover:text-white transition-colors">clubs list</a>
+                    <a href="#" class="text-white/80 hover:text-white transition-colors">Contact Us</a>
+                </div>
+
+                <!-- Social Links -->
+                <div class="flex space-x-8">
+                    <a href="#" class="text-white/80 hover:text-white transition-colors">Instagram Page</a>
+                    <a href="#" class="text-white/80 hover:text-white transition-colors">LinkedIn Page</a>
+                </div>
+            </div>
+
+            <!-- Bottom Line -->
+            <div class="border-t border-white/20 pt-6">
+                <div class="flex justify-between items-center text-sm">
+                    <p class="text-white/80">© 2025 DataClub. All rights reserved.</p>
+                    <div class="flex space-x-6">
+                        <a href="#" class="text-white/80 hover:text-white transition-colors">Privacy Policy</a>
+                        <a href="#" class="text-white/80 hover:text-white transition-colors">Terms of Service</a>
+                        <a href="#" class="text-white/80 hover:text-white transition-colors">Cookie Settings</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Event data
+        const events = [
+            {
+                id: '1',
+                title: 'Machine Learning Workshop',
+                description: 'Hands-on workshop covering the fundamentals of machine learning with Python and scikit-learn. Perfect for beginners looking to get started in ML.',
+                date: '2024-02-15',
+                time: '14:00 - 17:00',
+                location: 'Faculty of Sciences',
+                city: 'Rabat',
+                type: 'Workshop',
+                capacity: 50,
+                registered: 42,
+                price: 0,
+                organizer: 'AI Innovation Lab',
+                tags: ['Machine Learning', 'Python', 'Beginner']
+            },
+            {
+                id: '2',
+                title: 'Data Science Conference 2024',
+                description: 'Annual conference bringing together industry experts and researchers to discuss the latest trends in data science and AI.',
+                date: '2024-02-20',
+                time: '09:00 - 18:00',
+                location: 'Hassan II Convention Center',
+                city: 'Casablanca',
+                type: 'Conference',
+                capacity: 300,
+                registered: 285,
+                price: 150,
+                organizer: 'Data Science Casablanca',
+                tags: ['Data Science', 'AI', 'Industry', 'Networking']
+            },
+            {
+                id: '3',
+                title: 'Deep Learning Bootcamp',
+                description: 'Intensive 3-day bootcamp covering neural networks, CNNs, RNNs, and modern deep learning frameworks like TensorFlow and PyTorch.',
+                date: '2024-02-25',
+                time: '09:00 - 17:00',
+                location: 'Tech Hub Fez',
+                city: 'Fez',
+                type: 'Workshop',
+                capacity: 30,
+                registered: 28,
+                price: 200,
+                organizer: 'Tech Innovators Fez',
+                tags: ['Deep Learning', 'Neural Networks', 'TensorFlow', 'Advanced']
+            },
+            {
+                id: '4',
+                title: 'AI Ethics Panel Discussion',
+                description: 'Panel discussion with experts discussing the ethical implications of AI and machine learning in society.',
+                date: '2024-03-01',
+                time: '19:00 - 21:00',
+                location: 'Al Akhawayn University',
+                city: 'Ifrane',
+                type: 'Meetup',
+                capacity: 100,
+                registered: 67,
+                price: 0,
+                organizer: 'Digital Analytics Hub',
+                tags: ['AI Ethics', 'Panel', 'Discussion', 'Society']
+            },
+            {
+                id: '5',
+                title: 'Data Visualization Hackathon',
+                description: '48-hour hackathon focused on creating innovative data visualizations and interactive dashboards.',
+                date: '2024-03-08',
+                time: '18:00 - 18:00 (+2 days)',
+                location: 'Cadi Ayyad University',
+                city: 'Marrakech',
+                type: 'Hackathon',
+                capacity: 80,
+                registered: 73,
+                price: 50,
+                organizer: 'ML Research Group',
+                tags: ['Data Visualization', 'Hackathon', 'Dashboard', 'Competition']
+            },
+            {
+                id: '6',
+                title: 'Quantum Computing Introduction',
+                description: 'Introduction to quantum computing concepts and their applications in machine learning and optimization.',
+                date: '2024-03-12',
+                time: '15:00 - 18:00',
+                location: 'Mohammed VI Polytechnic University',
+                city: 'Ben Guerir',
+                type: 'Workshop',
+                capacity: 25,
+                registered: 20,
+                price: 0,
+                organizer: 'Quantum Computing Club',
+                tags: ['Quantum Computing', 'ML', 'Optimization', 'Advanced']
+            },
+                        {
+                id: '7',
+                title: 'Machine Learning 77777  7777',
+                description: 'Hands-on workshop covering the fundamentals of machine learning with Python and scikit-learn. Perfect for beginners looking to get started in ML.',
+                date: '2024-02-15',
+                time: '14:00 - 17:00',
+                location: 'Faculty of Sciences',
+                city: 'guelm',
+                type: 'Workshop',
+                capacity: 50,
+                registered: 42,
+                price: 0,
+                organizer: 'AI Innovation Lab',
+                tags: ['Machine Learning', 'Python', 'Beginner']
+            },
+            
+        ];
+
+        let filteredEvents = [...events];
+
+        // Initialize page
+        function init() {
+            populateFilters();
+            renderEvents();
+            setupEventListeners();
+        }
+
+        // Populate filter dropdowns
+        function populateFilters() {
+            const cities = [...new Set(events.map(event => event.city))].sort();
+            const types = [...new Set(events.map(event => event.type))].sort();
+
+            const cityFilter = document.getElementById('city-filter');
+            const typeFilter = document.getElementById('type-filter');
+
+            cities.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city;
+                option.textContent = city;
+                cityFilter.appendChild(option);
+            });
+
+            types.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type;
+                typeFilter.appendChild(option);
+            });
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+
+        // Get type color
+        function getTypeColor(type) {
+            switch (type.toLowerCase()) {
+                case 'workshop':
+                    return 'bg-slate-100 text-slate-custom';
+                case 'conference':
+                    return 'bg-red-100 text-red-custom';
+                case 'meetup':
+                    return 'bg-gray-100 text-gray-700';
+                case 'hackathon':
+                    return 'bg-red-100 text-red-custom';
+                default:
+                    return 'bg-gray-100 text-gray-700';
+            }
+        }
+
+        // Render events
+        function renderEvents() {
+            const container = document.getElementById('events-container');
+            const noResults = document.getElementById('no-results');
+            const resultsCount = document.getElementById('results-count');
+
+            if (filteredEvents.length === 0) {
+                container.classList.add('hidden');
+                noResults.classList.remove('hidden');
+                resultsCount.textContent = 'No events found';
+                return;
+            }
+
+            container.classList.remove('hidden');
+            noResults.classList.add('hidden');
+            resultsCount.textContent = `Showing ${filteredEvents.length} of ${events.length} events`;
+
+            container.innerHTML = filteredEvents.map(event => {
+                const spotsLeft = event.capacity - event.registered;
+                const isAlmostFull = spotsLeft <= 10;
+                const isFull = spotsLeft <= 0;
+
+                return `
+                    <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer" onclick="viewEvent('${event.id}')">
+                        <div class="relative">
+                            <div class="h-48 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
+                                <div class="text-slate-400 text-6xl font-bold opacity-20">
+                                    ${event.title.charAt(0)}
+                                </div>
+                            </div>
+                            <div class="absolute top-4 left-4">
+                                <span class="px-3 py-1 rounded-full text-xs font-medium ${getTypeColor(event.type)}">
+                                    ${event.type}
+                                </span>
+                            </div>
+                            <div class="absolute top-4 right-4 bg-white rounded-lg p-2 shadow-sm">
+                                <div class="text-center">
+                                    <div class="text-xs text-gray-500 uppercase tracking-wide">
+                                        ${formatDate(event.date).split(' ')[0]}
+                                    </div>
+                                    <div class="text-lg font-bold text-black-custom">
+                                        ${formatDate(event.date).split(' ')[2]}
+                                    </div>
+                                    <div class="text-xs text-gray-500">
+                                        ${formatDate(event.date).split(' ')[1]}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-6">
+                            <div class="mb-4">
+                                <h3 class="text-xl font-bold text-black-custom group-hover:text-slate-custom transition-colors mb-2">
+                                    ${event.title}
+                                </h3>
+                                <p class="text-gray-600 text-sm line-clamp-2">
+                                    ${event.description}
+                                </p>
+                            </div>
+
+                            <div class="space-y-2 mb-4">
+                                <div class="flex items-center text-gray-500 text-sm">
+                                    <i class="fas fa-clock mr-2"></i>
+                                    ${event.time}
+                                </div>
+                                <div class="flex items-center text-gray-500 text-sm">
+                                    <i class="fas fa-map-marker-alt mr-2"></i>
+                                    ${event.location}, ${event.city}
+                                </div>
+                                <div class="flex items-center text-gray-500 text-sm">
+                                    <i class="fas fa-users mr-2"></i>
+                                    ${event.registered}/${event.capacity} registered
+                                    ${isAlmostFull && !isFull ? `<span class="ml-2 text-red-custom text-xs font-medium">Only ${spotsLeft} spots left!</span>` : ''}
+                                    ${isFull ? '<span class="ml-2 text-red-custom text-xs font-medium">Fully booked</span>' : ''}
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                ${event.tags.slice(0, 3).map(tag => `
+                                    <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md">
+                                        ${tag}
+                                    </span>
+                                `).join('')}
+                            </div>
+
+                            <div class="flex items-center justify-between">
+                                <div class="text-sm text-gray-500">
+                                    by ${event.organizer}
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <div class="text-right">
+                                        <div class="text-lg font-bold text-black-custom">
+                                            ${event.price === 0 ? 'Free' : `${event.price} MAD`}
+                                        </div>
+                                    </div>
+                                    <button class="${isFull ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-red-custom text-white hover:bg-red-600'} px-4 py-2 rounded-lg text-sm font-medium transition-colors" ${isFull ? 'disabled' : ''}>
+                                        ${isFull ? 'Full' : 'Register'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Filter events
+        function filterEvents() {
+            const searchQuery = document.getElementById('search-input').value.toLowerCase();
+            const selectedCity = document.getElementById('city-filter').value;
+            const selectedType = document.getElementById('type-filter').value;
+
+            filteredEvents = events.filter(event => {
+                const matchesSearch = searchQuery === '' || 
+                    event.title.toLowerCase().includes(searchQuery) ||
+                    event.description.toLowerCase().includes(searchQuery) ||
+                    event.organizer.toLowerCase().includes(searchQuery) ||
+                    event.tags.some(tag => tag.toLowerCase().includes(searchQuery));
+
+                const matchesCity = selectedCity === '' || event.city === selectedCity;
+                const matchesType = selectedType === '' || event.type === selectedType;
+
+                return matchesSearch && matchesCity && matchesType;
+            });
+
+            renderEvents();
+            updateClearButton();
+        }
+
+        // Update clear button visibility
+        function updateClearButton() {
+            const clearButton = document.getElementById('clear-filters');
+            const hasFilters = document.getElementById('search-input').value ||
+                              document.getElementById('city-filter').value ||
+                              document.getElementById('type-filter').value;
+            
+            if (hasFilters) {
+                clearButton.classList.remove('hidden');
+            } else {
+                clearButton.classList.add('hidden');
+            }
+        }
+
+        // Clear all filters
+        function clearFilters() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('city-filter').value = '';
+            document.getElementById('type-filter').value = '';
+            filteredEvents = [...events];
+            renderEvents();
+            updateClearButton();
+        }
+
+        // View event details
+        function viewEvent(eventId) {
+            window.location.href = `event.html?id=${eventId}`;
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            document.getElementById('search-input').addEventListener('input', filterEvents);
+            document.getElementById('city-filter').addEventListener('change', filterEvents);
+            document.getElementById('type-filter').addEventListener('change', filterEvents);
+            document.getElementById('clear-filters').addEventListener('click', clearFilters);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

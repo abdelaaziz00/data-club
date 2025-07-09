@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Club Profile - DataClub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'red-custom': '#F05454',
+                        'gray-custom': '#F5F5F5',
+                        'slate-custom': '#30475E',
+                        'black-custom': '#121212',
+                        'brand-red': '#F05454',
+                        'brand-slate': '#30475E',
+                        'brand-gray': '#F5F5F5',
+                        'brand-dark': '#121212'
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-custom">
+    <!-- Navigation -->
+        <header class="bg-white py-4 px-6">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <!-- Logo -->
+            <div class="flex items-center space-x-3">
+                <img src="../static/images/mds logo.png" alt="MDS Logo" class="w-40 h-30 object-contain">
+            </div>
+
+            <!-- Navigation -->
+            <nav class="hidden md:flex items-center space-x-8">
+                <a href="home.html" class="text-brand-dark hover:text-brand-red transition-colors">Home Page</a>
+                <a href="events.html" class="text-brand-dark hover:text-brand-red transition-colors">Events</a>
+                <a href="clubs.html" class="text-brand-dark hover:text-brand-red transition-colors">Clubs</a>
+                <a href="contactus.html" class="text-brand-dark hover:text-brand-red transition-colors">Contact us</a>
+                <div class="flex space-x-2">
+                    <a  href="auth.html"class="bg-brand-slate text-white px-4 py-2 rounded-lg font-medium">Signup</a>
+                    <a  href="auth.html"class="bg-brand-red text-white px-4 py-2 rounded-lg font-medium">Login</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Back Button -->
+        <div class="mb-6">
+            <button onclick="history.back()" class="flex items-center text-slate-custom hover:text-slate-700 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Back to Clubs
+            </button>
+        </div>
+
+        <!-- Club Profile -->
+        <div id="club-profile" class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <!-- Club will be populated by JavaScript -->
+        </div>
+
+        <!-- Club Events -->
+        <div class="mt-12">
+            <h2 class="text-2xl font-bold text-black-custom mb-6">Upcoming Events</h2>
+            <div id="club-events" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Events will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Club Members -->
+        <div class="mt-12">
+            <h2 class="text-2xl font-bold text-black-custom mb-6">Recent Members</h2>
+            <div id="club-members" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Members will be populated by JavaScript -->
+            </div>
+        </div>
+    </main>
+
+        <footer class="bg-brand-red text-white py-12 px-6">
+        <div class="max-w-7xl mx-auto">
+            <!-- Logo and Links -->
+            <div class="flex flex-col items-center mb-8">
+                <div class="flex items-center space-x-3 mb-6">
+                    <img src="mds logo.png" alt="MDS Logo" class="w-40 h-30 object-contain">
+                </div>
+
+                <!-- Navigation Links -->
+                <div class="flex space-x-8 mb-6">
+                    <a href="#" class="text-white/80 hover:text-white transition-colors">Home Page</a>
+                    <a href="#" class="text-white/80 hover:text-white transition-colors">Events List</a>
+                    <a href="#" class="text-white/80 hover:text-white transition-colors">clubs list</a>
+                    <a href="#" class="text-white/80 hover:text-white transition-colors">Contact Us</a>
+                </div>
+
+                <!-- Social Links -->
+                <div class="flex space-x-8">
+                    <a href="#" class="text-white/80 hover:text-white transition-colors">Instagram Page</a>
+                    <a href="#" class="text-white/80 hover:text-white transition-colors">LinkedIn Page</a>
+                </div>
+            </div>
+
+            <!-- Bottom Line -->
+            <div class="border-t border-white/20 pt-6">
+                <div class="flex justify-between items-center text-sm">
+                    <p class="text-white/80">© 2025 DataClub. All rights reserved.</p>
+                    <div class="flex space-x-6">
+                        <a href="#" class="text-white/80 hover:text-white transition-colors">Privacy Policy</a>
+                        <a href="#" class="text-white/80 hover:text-white transition-colors">Terms of Service</a>
+                        <a href="#" class="text-white/80 hover:text-white transition-colors">Cookie Settings</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Club data (same as in clubs.html)
+        const clubs = [
+            {
+                id: '1',
+                name: 'AI Innovation Lab',
+                school: 'Mohammed V University',
+                city: 'Rabat',
+                description: 'Leading AI research and development initiatives across Morocco. We focus on machine learning, deep learning, and AI applications in various industries. Our mission is to bridge the gap between academic research and real-world applications, fostering innovation and collaboration among students, researchers, and industry professionals.',
+                fullDescription: 'The AI Innovation Lab at Mohammed V University is a cutting-edge research and development hub dedicated to advancing artificial intelligence technologies in Morocco and beyond. Founded in 2020, our lab has quickly become a leading force in AI research, bringing together brilliant minds from diverse backgrounds to tackle complex challenges and create innovative solutions.\n\nOur research areas include machine learning, deep learning, natural language processing, computer vision, and robotics. We work on projects ranging from healthcare AI solutions to smart city technologies, always with a focus on creating positive impact for society.\n\nWhat sets us apart is our commitment to practical application. We don\'t just conduct research in isolation – we actively collaborate with industry partners, government agencies, and international organizations to ensure our work translates into real-world solutions.',
+                logo: 'AI',
+                memberCount: 85,
+                established: '2020',
+                website: 'https://ai-innovation-lab.ma',
+                email: 'contact@ai-innovation-lab.ma',
+                phone: '+212 537 77 18 34',
+                address: 'Faculty of Sciences, Mohammed V University, Rabat',
+                social: {
+                    instagram: 'https://instagram.com/ai_innovation_lab',
+                    facebook: 'https://facebook.com/ai.innovation.lab',
+                    linkedin: 'https://linkedin.com/company/ai-innovation-lab'
+                },
+                achievements: [
+                    'Winner of Morocco AI Challenge 2023',
+                    'Published 15+ research papers in top-tier conferences',
+                    'Collaborated with 10+ industry partners',
+                    'Organized 25+ workshops and seminars'
+                ],
+                focusAreas: ['Machine Learning', 'Deep Learning', 'Computer Vision', 'NLP', 'Robotics'],
+                meetingSchedule: 'Every Wednesday at 6:00 PM',
+                requirements: 'Basic programming knowledge in Python, enthusiasm for AI'
+            },
+            {
+                id: '2',
+                name: 'Data Science Casablanca',
+                school: 'Hassan II University',
+                city: 'Casablanca',
+                description: 'Empowering students with practical data science skills through hands-on workshops, competitions, and industry collaborations.',
+                fullDescription: 'Data Science Casablanca is the premier data science community at Hassan II University, dedicated to empowering students with practical skills and real-world experience in data science and analytics. Since our founding in 2019, we have grown into one of Morocco\'s most active and influential student-led data science organizations.\n\nOur approach is hands-on and industry-focused. We believe that the best way to learn data science is by doing, which is why our programs emphasize practical projects, real datasets, and collaboration with industry partners. Our members work on everything from predictive analytics for local businesses to machine learning solutions for social good.\n\nWe maintain strong partnerships with leading companies in Morocco and internationally, providing our members with internship opportunities, mentorship, and direct pathways to exciting careers in data science.',
+                logo: 'DS',
+                memberCount: 120,
+                established: '2019',
+                website: 'https://datasciencecasa.org',
+                email: 'hello@datasciencecasa.org',
+                phone: '+212 522 23 06 80',
+                address: 'Faculty of Sciences and Technology, Hassan II University, Casablanca',
+                social: {
+                    instagram: 'https://instagram.com/datasciencecasa',
+                    twitter: 'https://twitter.com/datasciencecasa',
+                    linkedin: 'https://linkedin.com/company/data-science-casablanca'
+                },
+                achievements: [
+                    'Largest data science community in Morocco',
+                    'Hosted 50+ workshops and bootcamps',
+                    'Placed 100+ members in internships',
+                    'Winner of National Data Science Competition 2022'
+                ],
+                focusAreas: ['Data Analytics', 'Business Intelligence', 'Predictive Modeling', 'Data Visualization', 'Big Data'],
+                meetingSchedule: 'Every Friday at 5:00 PM',
+                requirements: 'Interest in data science, basic statistics knowledge preferred'
+            },
+            {
+                id: '3',
+                name: 'Tech Innovators Fez',
+                school: 'Sidi Mohamed Ben Abdellah University',
+                city: 'Fez',
+                description: 'Building the future of technology through innovation, collaboration, and cutting-edge research in emerging tech fields.',
+                fullDescription: 'Tech Innovators Fez represents the next generation of technology leaders at Sidi Mohamed Ben Abdellah University. Founded in 2021, our club is dedicated to exploring and developing cutting-edge technologies that will shape the future of our digital world.\n\nWe focus on emerging technologies including artificial intelligence, blockchain, IoT, cybersecurity, and quantum computing. Our members are encouraged to think big, experiment freely, and push the boundaries of what\'s possible with technology.\n\nOur innovation lab provides state-of-the-art equipment and resources for prototyping and development. We regularly host hackathons, innovation challenges, and tech talks featuring industry leaders and researchers from around the world.',
+                logo: 'TI',
+                memberCount: 95,
+                established: '2021',
+                website: 'https://techinnovatorsfez.ma',
+                email: 'info@techinnovatorsfez.ma',
+                phone: '+212 535 60 29 53',
+                address: 'Faculty of Sciences and Technology, Sidi Mohamed Ben Abdellah University, Fez',
+                social: {
+                    facebook: 'https://facebook.com/techinnovatorsfez',
+                    linkedin: 'https://linkedin.com/company/tech-innovators-fez'
+                },
+                achievements: [
+                    'Launched 5 successful tech startups',
+                    'Won Regional Innovation Award 2023',
+                    'Developed 20+ open-source projects',
+                    'Established partnerships with 8 tech companies'
+                ],
+                focusAreas: ['Blockchain', 'IoT', 'Cybersecurity', 'Mobile Development', 'Cloud Computing'],
+                meetingSchedule: 'Every Tuesday at 7:00 PM',
+                requirements: 'Programming experience, passion for innovation'
+            },
+            {
+                id: '4',
+                name: 'Digital Analytics Hub',
+                school: 'Al Akhawayn University',
+                city: 'Ifrane',
+                description: 'Specializing in digital marketing analytics, business intelligence, and data-driven decision making for the digital age.',
+                fullDescription: 'The Digital Analytics Hub at Al Akhawayn University is where business meets technology. We specialize in the intersection of data science and digital business, focusing on how analytics can drive better decision-making and business outcomes in the digital age.\n\nOur members learn to work with real business data, understand customer behavior, optimize marketing campaigns, and create actionable insights that drive business growth. We partner with local and international companies to provide our members with hands-on experience in digital analytics.\n\nWhat makes us unique is our focus on the business application of data science. While technical skills are important, we emphasize understanding the business context and communicating insights effectively to stakeholders.',
+                logo: 'DA',
+                memberCount: 67,
+                established: '2022',
+                website: 'https://digitalanalyticshub.org',
+                email: 'contact@digitalanalyticshub.org',
+                phone: '+212 535 86 20 00',
+                address: 'Al Akhawayn University, Ifrane',
+                social: {
+                    instagram: 'https://instagram.com/digitalanalyticshub',
+                    twitter: 'https://twitter.com/digitalanalyticshub',
+                    facebook: 'https://facebook.com/digitalanalyticshub'
+                },
+                achievements: [
+                    'Completed 15+ client projects',
+                    'Certified 50+ members in Google Analytics',
+                    'Hosted Digital Marketing Summit 2023',
+                    'Partnership with 5 digital agencies'
+                ],
+                focusAreas: ['Digital Marketing', 'Web Analytics', 'Customer Analytics', 'Business Intelligence', 'E-commerce Analytics'],
+                meetingSchedule: 'Every Thursday at 6:30 PM',
+                requirements: 'Interest in business and analytics, basic Excel skills'
+            },
+            {
+                id: '5',
+                name: 'ML Research Group',
+                school: 'Cadi Ayyad University',
+                city: 'Marrakech',
+                description: 'Advancing machine learning research and applications with focus on computer vision, NLP, and predictive modeling.',
+                fullDescription: 'The ML Research Group at Cadi Ayyad University is dedicated to advancing the frontiers of machine learning research while maintaining a strong focus on practical applications. Our group brings together undergraduate and graduate students passionate about pushing the boundaries of what\'s possible with machine learning.\n\nOur research spans multiple domains including computer vision, natural language processing, predictive modeling, and reinforcement learning. We work on both theoretical advances and practical applications, often collaborating with international research institutions and industry partners.\n\nWe believe in open science and regularly publish our findings in top-tier conferences and journals. Our members are encouraged to contribute to open-source projects and share their knowledge with the broader ML community.',
+                logo: 'ML',
+                memberCount: 78,
+                established: '2020',
+                website: 'https://mlresearchgroup.ma',
+                email: 'research@mlresearchgroup.ma',
+                phone: '+212 524 43 46 49',
+                address: 'Faculty of Sciences Semlalia, Cadi Ayyad University, Marrakech',
+                social: {
+                    linkedin: 'https://linkedin.com/company/ml-research-group',
+                    twitter: 'https://twitter.com/mlresearchgroup'
+                },
+                achievements: [
+                    'Published 25+ research papers',
+                    'Received 3 research grants',
+                    'Organized International ML Workshop 2023',
+                    'Contributed to 10+ open-source projects'
+                ],
+                focusAreas: ['Computer Vision', 'Natural Language Processing', 'Reinforcement Learning', 'Deep Learning', 'MLOps'],
+                meetingSchedule: 'Every Monday at 5:30 PM',
+                requirements: 'Strong mathematical background, programming skills in Python/R'
+            },
+            {
+                id: '6',
+                name: 'Quantum Computing Club',
+                school: 'Mohammed VI Polytechnic University',
+                city: 'Ben Guerir',
+                description: 'Exploring the frontiers of quantum computing and its applications in data science and artificial intelligence.',
+                fullDescription: 'The Quantum Computing Club at Mohammed VI Polytechnic University is at the forefront of quantum technology education and research in Morocco. As one of the newest and most exciting fields in computing, quantum computing represents a paradigm shift that could revolutionize how we approach complex computational problems.\n\nOur club focuses on both the theoretical foundations of quantum computing and its practical applications in areas such as optimization, cryptography, machine learning, and simulation. We work with quantum simulators and have access to real quantum computers through cloud platforms.\n\nGiven the nascent nature of the field, we emphasize learning together and building a strong foundation in quantum mechanics, linear algebra, and quantum algorithms. Our members often go on to pursue advanced degrees or careers in quantum technology.',
+                logo: 'QC',
+                memberCount: 42,
+                established: '2023',
+                website: 'https://quantumclub.um6p.ma',
+                email: 'quantum@um6p.ma',
+                phone: '+212 524 38 13 00',
+                address: 'Mohammed VI Polytechnic University, Ben Guerir',
+                social: {
+                    instagram: 'https://instagram.com/quantumcomputing_club',
+                    linkedin: 'https://linkedin.com/company/quantum-computing-club'
+                },
+                achievements: [
+                    'First quantum computing club in Morocco',
+                    'Completed 5 quantum algorithm implementations',
+                    'Hosted Quantum Computing Workshop Series',
+                    'Partnership with IBM Quantum Network'
+                ],
+                focusAreas: ['Quantum Algorithms', 'Quantum Machine Learning', 'Quantum Cryptography', 'Quantum Simulation', 'Quantum Hardware'],
+                meetingSchedule: 'Every Saturday at 2:00 PM',
+                requirements: 'Strong physics/mathematics background, curiosity about quantum mechanics'
+            }
+        ];
+
+        // Sample events for clubs
+        const clubEvents = {
+            '1': [
+                { title: 'Machine Learning Workshop', date: '2024-02-15', type: 'Workshop' },
+                { title: 'AI Ethics Seminar', date: '2024-02-22', type: 'Seminar' },
+                { title: 'Deep Learning Bootcamp', date: '2024-03-01', type: 'Bootcamp' }
+            ],
+            '2': [
+                { title: 'Data Visualization Workshop', date: '2024-02-18', type: 'Workshop' },
+                { title: 'Industry Networking Event', date: '2024-02-25', type: 'Networking' }
+            ],
+            '3': [
+                { title: 'Blockchain Development Workshop', date: '2024-02-20', type: 'Workshop' },
+                { title: 'Innovation Challenge', date: '2024-03-05', type: 'Competition' }
+            ],
+            '4': [
+                { title: 'Google Analytics Certification', date: '2024-02-17', type: 'Certification' },
+                { title: 'Digital Marketing Trends', date: '2024-02-24', type: 'Seminar' }
+            ],
+            '5': [
+                { title: 'Computer Vision Research Presentation', date: '2024-02-19', type: 'Research' },
+                { title: 'NLP Workshop', date: '2024-02-26', type: 'Workshop' }
+            ],
+            '6': [
+                { title: 'Quantum Algorithms Introduction', date: '2024-02-21', type: 'Workshop' },
+                { title: 'Quantum Computing Symposium', date: '2024-03-03', type: 'Symposium' }
+            ]
+        };
+
+        // Sample members
+        const clubMembers = {
+            '1': [
+                { name: 'Ahmed Benali', role: 'President', avatar: 'AB' },
+                { name: 'Fatima Zahra', role: 'Vice President', avatar: 'FZ' },
+                { name: 'Omar Idrissi', role: 'Technical Lead', avatar: 'OI' },
+                { name: 'Aicha Alami', role: 'Research Coordinator', avatar: 'AA' }
+            ],
+            '2': [
+                { name: 'Youssef Tazi', role: 'President', avatar: 'YT' },
+                { name: 'Salma Berrada', role: 'Vice President', avatar: 'SB' },
+                { name: 'Karim Fassi', role: 'Project Manager', avatar: 'KF' },
+                { name: 'Nadia Cherkaoui', role: 'Industry Relations', avatar: 'NC' }
+            ],
+            '3': [
+                { name: 'Mehdi Alaoui', role: 'President', avatar: 'MA' },
+                { name: 'Zineb Bennani', role: 'CTO', avatar: 'ZB' },
+                { name: 'Rachid Amrani', role: 'Innovation Lead', avatar: 'RA' },
+                { name: 'Laila Benjelloun', role: 'Community Manager', avatar: 'LB' }
+            ],
+            '4': [
+                { name: 'Hassan Kettani', role: 'President', avatar: 'HK' },
+                { name: 'Meryem Ouali', role: 'Analytics Lead', avatar: 'MO' },
+                { name: 'Amine Zouak', role: 'Business Development', avatar: 'AZ' },
+                { name: 'Khadija Mansouri', role: 'Marketing Director', avatar: 'KM' }
+            ],
+            '5': [
+                { name: 'Abdellatif Miraoui', role: 'Research Director', avatar: 'AM' },
+                { name: 'Siham Tabik', role: 'ML Engineer', avatar: 'ST' },
+                { name: 'Mohamed Amine', role: 'PhD Student', avatar: 'MA' },
+                { name: 'Rajae Aboulaich', role: 'Research Assistant', avatar: 'RA' }
+            ],
+            '6': [
+                { name: 'Driss Aboutajdine', role: 'Faculty Advisor', avatar: 'DA' },
+                { name: 'Yasmine Abouelkheir', role: 'President', avatar: 'YA' },
+                { name: 'Hamza Bendemra', role: 'Quantum Developer', avatar: 'HB' },
+                { name: 'Imane Khalil', role: 'Research Coordinator', avatar: 'IK' }
+            ]
+        };
+
+        // Get club ID from URL
+        function getClubId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('id');
+        }
+
+        // Find club by ID
+        function findClub(id) {
+            return clubs.find(club => club.id === id);
+        }
+
+        // Render club profile
+        function renderClubProfile(club) {
+            const container = document.getElementById('club-profile');
+            
+            container.innerHTML = `
+                <!-- Hero Section -->
+                <div class="relative bg-gradient-to-r from-slate-custom to-slate-700 text-white p-8">
+                    <div class="flex flex-col md:flex-row items-start md:items-center space-y-6 md:space-y-0 md:space-x-8">
+                        <div class="w-24 h-24 bg-white bg-opacity-20 rounded-xl flex items-center justify-center text-3xl font-bold">
+                            ${club.logo}
+                        </div>
+                        <div class="flex-1">
+                            <h1 class="text-3xl md:text-4xl font-bold mb-2">${club.name}</h1>
+                            <div class="flex flex-wrap items-center gap-4 text-lg opacity-90">
+                                <div class="flex items-center">
+                                    <i class="fas fa-graduation-cap mr-2"></i>
+                                    ${club.school}
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-map-marker-alt mr-2"></i>
+                                    ${club.city}
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-users mr-2"></i>
+                                    ${club.memberCount} members
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-calendar mr-2"></i>
+                                    Est. ${club.established}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col space-y-3">
+                            <button class="bg-red-custom text-white px-6 py-3 rounded-lg font-medium hover:bg-red-600 transition-colors">
+                                Join Club
+                            </button>
+                            <div class="flex space-x-2">
+                                ${Object.entries(club.social).map(([platform, url]) => 
+                                    url ? `
+                                        <a href="${url}" target="_blank" rel="noopener noreferrer" 
+                                           class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center text-white hover:bg-opacity-30 transition-colors">
+                                            <i class="fab fa-${platform}"></i>
+                                        </a>
+                                    ` : ''
+                                ).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content Sections -->
+                <div class="p-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <!-- Main Content -->
+                        <div class="lg:col-span-2 space-y-8">
+                            <!-- About -->
+                            <section>
+                                <h2 class="text-2xl font-bold text-black-custom mb-4">About Us</h2>
+                                <div class="prose prose-gray max-w-none">
+                                    ${club.fullDescription.split('\n').map(paragraph => 
+                                        paragraph.trim() ? `<p class="mb-4 text-gray-600 leading-relaxed">${paragraph}</p>` : ''
+                                    ).join('')}
+                                </div>
+                            </section>
+
+                            <!-- Focus Areas -->
+                            <section>
+                                <h2 class="text-2xl font-bold text-black-custom mb-4">Focus Areas</h2>
+                                <div class="flex flex-wrap gap-3">
+                                    ${club.focusAreas.map(area => `
+                                        <span class="px-4 py-2 bg-slate-100 text-slate-custom rounded-lg font-medium">
+                                            ${area}
+                                        </span>
+                                    `).join('')}
+                                </div>
+                            </section>
+
+                            <!-- Achievements -->
+                            <section>
+                                <h2 class="text-2xl font-bold text-black-custom mb-4">Achievements</h2>
+                                <div class="space-y-3">
+                                    ${club.achievements.map(achievement => `
+                                        <div class="flex items-start space-x-3">
+                                            <div class="w-2 h-2 bg-red-custom rounded-full mt-2 flex-shrink-0"></div>
+                                            <p class="text-gray-600">${achievement}</p>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </section>
+                        </div>
+
+                        <!-- Sidebar -->
+                        <div class="space-y-6">
+                            <!-- Contact Info -->
+                            <div class="bg-gray-50 rounded-xl p-6">
+                                <h3 class="text-lg font-bold text-black-custom mb-4">Contact Information</h3>
+                                <div class="space-y-3">
+                                    <div class="flex items-start space-x-3">
+                                        <i class="fas fa-envelope text-slate-custom mt-1"></i>
+                                        <div>
+                                            <p class="text-sm text-gray-500">Email</p>
+                                            <a href="mailto:${club.email}" class="text-slate-custom hover:underline">${club.email}</a>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start space-x-3">
+                                        <i class="fas fa-phone text-slate-custom mt-1"></i>
+                                        <div>
+                                            <p class="text-sm text-gray-500">Phone</p>
+                                            <a href="tel:${club.phone}" class="text-slate-custom hover:underline">${club.phone}</a>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start space-x-3">
+                                        <i class="fas fa-globe text-slate-custom mt-1"></i>
+                                        <div>
+                                            <p class="text-sm text-gray-500">Website</p>
+                                            <a href="${club.website}" target="_blank" class="text-slate-custom hover:underline">${club.website}</a>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start space-x-3">
+                                        <i class="fas fa-map-marker-alt text-slate-custom mt-1"></i>
+                                        <div>
+                                            <p class="text-sm text-gray-500">Address</p>
+                                            <p class="text-gray-700">${club.address}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Meeting Schedule -->
+                            <div class="bg-red-50 rounded-xl p-6">
+                                <h3 class="text-lg font-bold text-black-custom mb-4">Meeting Schedule</h3>
+                                <div class="flex items-center space-x-3">
+                                    <i class="fas fa-clock text-red-custom"></i>
+                                    <p class="text-gray-700">${club.meetingSchedule}</p>
+                                </div>
+                            </div>
+
+                            <!-- Requirements -->
+                            <div class="bg-slate-50 rounded-xl p-6">
+                                <h3 class="text-lg font-bold text-black-custom mb-4">Requirements</h3>
+                                <p class="text-gray-700">${club.requirements}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render club events
+        function renderClubEvents(clubId) {
+            const container = document.getElementById('club-events');
+            const events = clubEvents[clubId] || [];
+
+            if (events.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 col-span-full text-center">No upcoming events</p>';
+                return;
+            }
+
+            container.innerHTML = events.map(event => `
+                <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
+                    <div class="flex items-start justify-between mb-4">
+                        <h3 class="text-lg font-bold text-black-custom">${event.title}</h3>
+                        <span class="px-3 py-1 bg-slate-100 text-slate-custom text-xs rounded-full">${event.type}</span>
+                    </div>
+                    <div class="flex items-center text-gray-500 text-sm mb-4">
+                        <i class="fas fa-calendar mr-2"></i>
+                        ${new Date(event.date).toLocaleDateString('en-US', { 
+                            weekday: 'long', 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                        })}
+                    </div>
+                    <button class="w-full bg-red-custom text-white py-2 rounded-lg hover:bg-red-600 transition-colors">
+                        Learn More
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Render club members
+        function renderClubMembers(clubId) {
+            const container = document.getElementById('club-members');
+            const members = clubMembers[clubId] || [];
+
+            if (members.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 col-span-full text-center">No members to display</p>';
+                return;
+            }
+
+            container.innerHTML = members.map(member => `
+                <div class="bg-white rounded-xl shadow-md p-6 text-center hover:shadow-lg transition-shadow">
+                    <div class="w-16 h-16 bg-gradient-to-br from-slate-custom to-slate-700 rounded-full flex items-center justify-center text-white font-bold text-lg mx-auto mb-4">
+                        ${member.avatar}
+                    </div>
+                    <h3 class="text-lg font-bold text-black-custom mb-1">${member.name}</h3>
+                    <p class="text-gray-500 text-sm">${member.role}</p>
+                </div>
+            `).join('');
+        }
+
+        // Initialize page
+        function init() {
+            const clubId = getClubId();
+            const club = findClub(clubId);
+
+            if (!club) {
+                document.body.innerHTML = `
+                    <div class="min-h-screen flex items-center justify-center">
+                        <div class="text-center">
+                            <h1 class="text-2xl font-bold text-black-custom mb-4">Club Not Found</h1>
+                            <p class="text-gray-600 mb-6">The club you're looking for doesn't exist.</p>
+                            <a href="clubs.html" class="bg-red-custom text-white px-6 py-3 rounded-lg hover:bg-red-600 transition-colors">
+                                Back to Clubs
+                            </a>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Update page title
+            document.title = `${club.name} - DataClub`;
+
+            // Render components
+            renderClubProfile(club);
+            renderClubEvents(clubId);
+            renderClubMembers(clubId);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
