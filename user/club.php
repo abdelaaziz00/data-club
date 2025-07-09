@@ -1,4 +1,9 @@
 <?php
+// Start session
+session_start();
+
+
+
 // Database connection
 $host = "localhost";
 $user = "root";
@@ -193,12 +198,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_club') {
             <!-- Navigation -->
             <nav class="hidden md:flex items-center space-x-8">
                 <a href="home.html" class="text-brand-dark hover:text-brand-red transition-colors">Home Page</a>
-                <a href="events.html" class="text-brand-dark hover:text-brand-red transition-colors">Events</a>
+                <a href="events.php" class="text-brand-dark hover:text-brand-red transition-colors">Events</a>
                 <a href="clubs.php" class="text-brand-dark hover:text-brand-red transition-colors">Clubs</a>
                 <a href="contactus.html" class="text-brand-dark hover:text-brand-red transition-colors">Contact us</a>
                 <div class="flex space-x-2">
-                    <a  href="auth.html"class="bg-brand-slate text-white px-4 py-2 rounded-lg font-medium">Signup</a>
-                    <a  href="auth.html"class="bg-brand-red text-white px-4 py-2 rounded-lg font-medium">Login</a>
+                    <a href="../auth/logout.php" class="bg-brand-red text-white px-4 py-2 rounded-lg font-medium">Logout</a>
                 </div>
             </nav>
         </div>

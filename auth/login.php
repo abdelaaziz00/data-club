@@ -1,5 +1,13 @@
 <?php
+// Set session security parameters BEFORE starting session
+ini_set('session.cookie_httponly', 1);
+ini_set('session.use_only_cookies', 1);
+ini_set('session.cookie_secure', 0); // Set to 1 if using HTTPS
+ini_set('session.cookie_path', '/'); // Ensure session is available across all directories
+
+// Start session with secure settings
 session_start();
+
 // Database config
 $servername = 'localhost';
 $username = 'root'; // Change if needed
@@ -31,8 +39,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $result = $stmt->get_result();
                 if ($row = $result->fetch_assoc()) {
                     if ($row['PASSWORD'] === $pass) {
+                        // Regenerate session ID for security
+                        session_regenerate_id(true);
                         $_SESSION['user_id'] = $row['ID_ADMIN'];
                         $_SESSION['privilege'] = 1;
+                        $_SESSION['login_time'] = time();
                         $message = 'Admin login successful! Redirecting...';
                         $messageType = 'success';
                         // Redirect to admin dashboard
@@ -54,12 +65,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $result2 = $stmt2->get_result();
                         if ($row2 = $result2->fetch_assoc()) {
                             if ($row2['PASSWORD'] === $pass) {
+                                // Regenerate session ID for security
+                                session_regenerate_id(true);
                                 $_SESSION['user_id'] = $row2['ID_MEMBER'];
                                 $_SESSION['privilege'] = 2;
+                                $_SESSION['login_time'] = time();
                                 $message = 'Member login successful! Redirecting...';
                                 $messageType = 'success';
+                                
                                 // Redirect to member dashboard
-                                header('Location: ../user/dashboard.php');
+                                header('Location: ../user/clubs.php');
                                 exit();
                             } else {
                                 $message = 'Invalid password.';
