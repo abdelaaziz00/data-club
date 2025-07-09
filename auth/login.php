@@ -32,6 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($row = $result->fetch_assoc()) {
                     if ($row['PASSWORD'] === $pass) {
                         $_SESSION['user_id'] = $row['ID_ADMIN'];
+                        $_SESSION['first_name'] = $row['FIRST_NAME'] ;
+                        $_SESSION['last_name'] = $row['LAST_NAME'] ;
                         $_SESSION['privilege'] = 1;
                         $message = 'Admin login successful! Redirecting...';
                         $messageType = 'success';
@@ -55,11 +57,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if ($row2 = $result2->fetch_assoc()) {
                             if ($row2['PASSWORD'] === $pass) {
                                 $_SESSION['user_id'] = $row2['ID_MEMBER'];
+                                $_SESSION['first_name'] = $row['FIRST_NAME'] ;
+                                $_SESSION['last_name'] = $row['LAST_NAME'] ;
                                 $_SESSION['privilege'] = 2;
                                 $message = 'Member login successful! Redirecting...';
                                 $messageType = 'success';
                                 // Redirect to member dashboard
-                                header('Location: ../user/dashboard.php');
+                                header('Location: ../user/home.php');
                                 exit();
                             } else {
                                 $message = 'Invalid password.';
