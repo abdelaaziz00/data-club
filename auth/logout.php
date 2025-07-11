@@ -6,6 +6,6 @@ session_start();
 session_destroy();
 
 // Redirect to home page
-header("Location: ../user/home.html");
+header("Location: ../user/home.php");
 exit();
 ?> 

@@ -332,7 +332,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         function goBack() {
             // You can customize this function to redirect to your homepage
-            window.location.href = '../index.html';
+            window.location.href = '../user/home.php';
         }
     </script>
 </body>

@@ -1,11 +1,12 @@
 <?php
 session_start();
 require_once 'db.php';
-$user_id = $_SESSION['user_id'];
 
-$stmt = $pdo->prepare("SELECT * FROM member WHERE ID_MEMBER = ?");
-$stmt->execute([$user_id]);
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
+// $user_id = $_SESSION['user_id'];
+
+// $stmt = $pdo->prepare("SELECT * FROM member WHERE ID_MEMBER = ?");
+// $stmt->execute([$user_id]);
+// $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 ?>
 
@@ -34,37 +35,13 @@ $user = $stmt->fetch(PDO::FETCH_ASSOC);
             }
         }
     </script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
 </head>
 <body class="bg-brand-gray">
     <!-- Header -->
-    <header class="bg-white py-4 px-6">
-                <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <!-- Logo -->
-            <div class="flex items-center space-x-3">
-                <img src="../static/images/mds logo.png" alt="MDS Logo" class="w-40 h-30 object-contain">
-            </div>
+<?php include '../includes/header.php'; ?> 
 
-            <!-- Navigation -->
-            <nav class="hidden md:flex items-center space-x-8">
-                <a href="home.html" class="text-brand-dark hover:text-brand-red transition-colors">Home Page</a>
-                <a href="events.html" class="text-brand-dark hover:text-brand-red transition-colors">Events</a>
-                <a href="clubs.html" class="text-brand-dark hover:text-brand-red transition-colors">Clubs</a>
-                <a href="contactus.html" class="text-brand-dark hover:text-brand-red transition-colors">Contact us</a>
-
-                <div class="flex items-center space-x-4">
-                    <div class="relative">
-                        <button id="profile-menu-button" class="flex items-center space-x-2 text-gray-600 hover:text-slate-custom transition-colors">
-                            <div class="w-8 h-8 bg-gradient-to-br from-slate-custom to-slate-700 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                <?php echo strtoupper(substr($user['FIRST_NAME'], 0, 1) . substr($user['LAST_NAME'], 0, 1)); ?>
-                            </div>
-                            <span class="text-sm font-medium"><?php echo htmlspecialchars($user['FIRST_NAME'] . ' ' . $user['LAST_NAME']); ?></span>
-                            <i class="fas fa-chevron-down text-xs"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
 
     <!-- Hero Section -->
     <section class="py-20 px-6">

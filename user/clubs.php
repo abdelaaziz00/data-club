@@ -2,7 +2,7 @@
 // Start session
 session_start();
 
-// Check if user is logged in
+// Check if user is logged in - you may need to adjust this based on your authentication system
 
 
 // Database connection
@@ -18,13 +18,72 @@ if ($conn->connect_error) {
     exit;
 }
 
+// Handle join club request
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['join_club'])) {
+    $userId = $_SESSION['user_id'];
+    $clubId = $_POST['club_id'];
+    
+    // Check if user already has a request for this club
+    $checkSql = "SELECT * FROM requestjoin WHERE ID_MEMBER = ? AND ID_CLUB = ?";
+    $checkStmt = $conn->prepare($checkSql);
+    $checkStmt->bind_param("ii", $userId, $clubId);
+    $checkStmt->execute();
+    $existing = $checkStmt->get_result();
+    
+    if ($existing->num_rows > 0) {
+        echo json_encode(["success" => false, "message" => "You have already requested to join this club"]);
+        exit;
+    }
+    
+    // Insert new join request
+    $insertSql = "INSERT INTO requestjoin (ID_MEMBER, ID_CLUB, ACCEPTED) VALUES (?, ?, 0)";
+    $insertStmt = $conn->prepare($insertSql);
+    $insertStmt->bind_param("ii", $userId, $clubId);
+    
+    if ($insertStmt->execute()) {
+        echo json_encode(["success" => true, "message" => "Join request sent successfully! You will be notified once it's reviewed."]);
+    } else {
+        echo json_encode(["success" => false, "message" => "Failed to send join request"]);
+    }
+    exit;
+}
+
+// Function to get user's join status for a club
+function getUserJoinStatus($conn, $userId, $clubId) {
+    $sql = "SELECT ACCEPTED FROM requestjoin WHERE ID_MEMBER = ? AND ID_CLUB = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ii", $userId, $clubId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows === 0) {
+        return null; // No request sent
+    }
+    
+    $row = $result->fetch_assoc();
+    return $row['ACCEPTED'] == 1 ? 'member' : 'pending';
+}
+
 // If AJAX request for clubs
 if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
+    $userId = $_SESSION['user_id'];
+    
     $sql = "SELECT ID_CLUB, NAME, LOGO, DESCRIPTION, UNIVERSITY, CITY, EMAIL, CLUB_PHONE FROM club";
     $result = $conn->query($sql);
 
     $clubs = [];
+    $cities = [];
+    $schools = [];
+    
     while ($row = $result->fetch_assoc()) {
+        // Track unique cities and schools for statistics
+        if (!in_array($row["CITY"], $cities)) {
+            $cities[] = $row["CITY"];
+        }
+        if (!in_array($row["UNIVERSITY"], $schools)) {
+            $schools[] = $row["UNIVERSITY"];
+        }
+        
         // Get focus areas for this club
         $topicSql = "SELECT t.TOPIC_NAME FROM topics t 
                      INNER JOIN focuses f ON t.TOPIC_ID = f.TOPIC_ID 
@@ -40,13 +99,16 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
             $topics[] = $topic["TOPIC_NAME"];
         }
 
-        // Get member count from accepted requestjoin
+        // Get member count from accepted requestjoin + club admin
         $memberCountSql = "SELECT COUNT(*) as count FROM requestjoin r JOIN member m ON r.ID_MEMBER = m.ID_MEMBER WHERE r.ID_CLUB = ? AND r.ACCEPTED = 1";
         $memberCountStmt = $conn->prepare($memberCountSql);
         $memberCountStmt->bind_param("i", $row["ID_CLUB"]);
         $memberCountStmt->execute();
         $memberCountResult = $memberCountStmt->get_result();
-        $memberCount = $memberCountResult->fetch_assoc()["count"];
+        $memberCount = $memberCountResult->fetch_assoc()["count"] + 1; // +1 for admin
+
+        // Get user's join status for this club
+        $userJoinStatus = getUserJoinStatus($conn, $userId, $row["ID_CLUB"]);
 
         $clubs[] = [
             "id" => $row["ID_CLUB"],
@@ -55,9 +117,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
             "city" => $row["CITY"],
             "description" => $row["DESCRIPTION"],
             "logo" => $row["LOGO"] ? "../static/images/" . $row["LOGO"] : substr($row["NAME"], 0, 2),
-            "memberCount" => $memberCount, // Use real count
-            "established" => "", // Add if you have this info
+            "memberCount" => $memberCount,
+            "established" => "2020", // Add if you have this info
             "focusAreas" => $topics ?: ["Data Science", "Machine Learning", "Analytics"],
+            "userJoinStatus" => $userJoinStatus,
             "social" => [
                 "instagram" => "",
                 "facebook" => "",
@@ -65,8 +128,21 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
             ]
         ];
     }
+    
+    // Calculate statistics
+    $statistics = [
+        "totalClubs" => count($clubs),
+        "totalCities" => count($cities),
+        "totalSchools" => count($schools)
+    ];
+    
+    $response = [
+        "clubs" => $clubs,
+        "statistics" => $statistics
+    ];
+    
     header('Content-Type: application/json');
-    echo json_encode($clubs);
+    echo json_encode($response);
     exit;
 }
 ?>
@@ -99,24 +175,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
 </head>
 <body class="bg-gray-custom">
     <!-- Navigation -->
-    <header class="bg-white py-4 px-6">
-        <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <!-- Logo -->
-            <div class="flex items-center space-x-3">
-                <img src="../static/images/mds logo.png" alt="MDS Logo" class="w-40 h-30 object-contain">
-            </div>
-            <!-- Navigation -->
-            <nav class="hidden md:flex items-center space-x-8">
-                <a href="home.html" class="text-brand-dark hover:text-brand-red transition-colors">Home Page</a>
-                <a href="events.php" class="text-brand-dark hover:text-brand-red transition-colors">Events</a>
-                <a href="clubs.php" class="text-brand-dark hover:text-brand-red transition-colors">Clubs</a>
-                <a href="contactus.html" class="text-brand-dark hover:text-brand-red transition-colors">Contact us</a>
-                <div class="flex space-x-2">
-                    <a href="../auth/logout.php" class="bg-brand-red text-white px-4 py-2 rounded-lg font-medium">Logout</a>
-                </div>
-            </nav>
-        </div>
-    </header>
+<?php include '../includes/header.php'; ?> 
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Header -->
@@ -216,6 +275,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
             <p class="text-gray-600">Try adjusting your search or filters to find more clubs.</p>
         </div>
     </main>
+    
     <footer class="bg-brand-red text-white py-12 px-6">
         <div class="max-w-7xl mx-auto">
             <!-- Logo and Links -->
@@ -249,23 +309,153 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
             </div>
         </div>
     </footer>
+    
     <script>
         let clubs = [];
         let filteredClubs = [];
 
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchClubs();
+            setupJoinClubHandlers();
+        });
+        
+        // Render join button based on user status
+        function renderJoinButton(club) {
+            if (!club.userJoinStatus) {
+                return `
+                    <button class="join-club-btn bg-red-custom text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-600 transition-colors" data-club-id="${club.id}">
+                        <i class="fas fa-plus mr-1"></i>
+                        Join Club
+                    </button>
+                `;
+            } else if (club.userJoinStatus === 'pending') {
+                return `
+                    <button class="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed" disabled>
+                        <i class="fas fa-clock mr-1"></i>
+                        Request Pending
+                    </button>
+                `;
+            } else if (club.userJoinStatus === 'member') {
+                return `
+                    <button class="bg-green-100 text-green-800 px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed" disabled>
+                        <i class="fas fa-check mr-1"></i>
+                        Member
+                    </button>
+                `;
+            }
+        }
+        
+        // Setup join club handlers
+        function setupJoinClubHandlers() {
+            document.addEventListener('click', function(e) {
+                if (e.target && (e.target.classList.contains('join-club-btn') || e.target.closest('.join-club-btn'))) {
+                    e.stopPropagation(); // Prevent card click
+                    const button = e.target.classList.contains('join-club-btn') ? e.target : e.target.closest('.join-club-btn');
+                    const clubId = button.getAttribute('data-club-id');
+                    joinClub(clubId, button);
+                }
+            });
+        }
+        
+        // Join club function
+        function joinClub(clubId, buttonElement) {
+            // Disable button to prevent multiple clicks
+            buttonElement.disabled = true;
+            buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Sending...';
+            
+            const formData = new FormData();
+            formData.append('join_club', '1');
+            formData.append('club_id', clubId);
+            
+            fetch('clubs.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update button to show pending status
+                    buttonElement.outerHTML = `
+                        <button class="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed" disabled>
+                            <i class="fas fa-clock mr-1"></i>
+                            Request Pending
+                        </button>
+                    `;
+                    
+                    // Show success message
+                    showNotification(data.message, 'success');
+                } else {
+                    // Re-enable button on error
+                    buttonElement.disabled = false;
+                    buttonElement.innerHTML = '<i class="fas fa-plus mr-1"></i> Join Club';
+                    showNotification(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                buttonElement.disabled = false;
+                buttonElement.innerHTML = '<i class="fas fa-plus mr-1"></i> Join Club';
+                showNotification('An error occurred while sending your request.', 'error');
+            });
+        }
+        
+        // Show notification function
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 transition-all duration-300 transform translate-x-full`;
+            notification.className += type === 'success' ? ' bg-green-100 text-green-800 border border-green-200' : ' bg-red-100 text-red-800 border border-red-200';
+            
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} mr-2"></i>
+                    ${message}
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+        
+        // Fetch clubs function
         function fetchClubs() {
             fetch('clubs.php?action=get_clubs')
                 .then(response => response.json())
                 .then(data => {
-                    clubs = data;
+                    clubs = data.clubs;
                     filteredClubs = [...clubs];
+                    
+                    // Update statistics
+                    updateStatistics(data.statistics);
+                    
                     populateFilters();
                     renderClubs();
                     setupEventListeners();
                 })
                 .catch(error => {
-                    document.getElementById('clubs-container').innerHTML = '<p class="text-red-500">Failed to load clubs.</p>';
+                    console.error('Error fetching clubs:', error);
+                    document.getElementById('clubs-container').innerHTML = '<p class="text-red-500 col-span-full text-center">Failed to load clubs. Please try again later.</p>';
                 });
+        }
+        
+        // Update statistics function
+        function updateStatistics(statistics) {
+            document.getElementById('total-clubs').textContent = statistics.totalClubs;
+            document.getElementById('total-cities').textContent = statistics.totalCities;
+            document.getElementById('total-schools').textContent = statistics.totalSchools;
         }
 
         // Populate filter dropdowns
@@ -312,10 +502,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
             resultsCount.textContent = `Showing ${filteredClubs.length} of ${clubs.length} clubs`;
 
             container.innerHTML = filteredClubs.map(club => `
-                <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer" onclick="viewClub('${club.id}')">
+                <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group">
                     <div class="p-6">
                         <div class="flex items-start justify-between mb-4">
-                            <div class="flex items-center space-x-4">
+                            <div class="flex items-center space-x-4 cursor-pointer" onclick="viewClub('${club.id}')">
                                 <div class="w-16 h-16 bg-gradient-to-br from-slate-custom to-slate-700 rounded-xl flex items-center justify-center text-white font-bold text-xl overflow-hidden">
                                     ${club.logo.includes('../static/images/') ? 
                                         `<img src="${club.logo}" alt="${club.name}" class="w-full h-full object-cover">` : 
@@ -340,27 +530,29 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
                             </div>
                         </div>
 
-                        <p class="text-gray-600 text-sm mb-4 line-clamp-3">
-                            ${club.description}
-                        </p>
+                        <div class="cursor-pointer" onclick="viewClub('${club.id}')">
+                            <p class="text-gray-600 text-sm mb-4 line-clamp-3">
+                                ${club.description}
+                            </p>
 
-                        <!-- Focus Areas -->
-                        <div class="flex flex-wrap gap-2 mb-4">
-                            ${club.focusAreas.slice(0, 3).map(area => `
-                                <span class="px-2 py-1 bg-slate-100 text-slate-custom text-xs rounded-full">
-                                    ${area}
-                                </span>
-                            `).join('')}
-                            ${club.focusAreas.length > 3 ? `
-                                <span class="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-full">
-                                    +${club.focusAreas.length - 3} more
-                                </span>
-                            ` : ''}
-                        </div>
+                            <!-- Focus Areas -->
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                ${club.focusAreas.slice(0, 3).map(area => `
+                                    <span class="px-2 py-1 bg-slate-100 text-slate-custom text-xs rounded-full">
+                                        ${area}
+                                    </span>
+                                `).join('')}
+                                ${club.focusAreas.length > 3 ? `
+                                    <span class="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-full">
+                                        +${club.focusAreas.length - 3} more
+                                    </span>
+                                ` : ''}
+                            </div>
 
-                        <div class="flex items-center justify-between text-sm text-gray-500 mb-4">
-                            <span>${club.memberCount} members</span>
-                            <span>Est. ${club.established}</span>
+                            <div class="flex items-center justify-between text-sm text-gray-500 mb-4">
+                                <span><i class="fas fa-users mr-1"></i>${club.memberCount} members</span>
+                                <span><i class="fas fa-calendar mr-1"></i>Est. ${club.established}</span>
+                            </div>
                         </div>
 
                         <div class="flex items-center justify-between">
@@ -376,9 +568,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
                                 ).join('')}
                             </div>
                             
-                            <button class="bg-red-custom text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-600 transition-colors">
-                                Join Club
-                            </button>
+                            ${renderJoinButton(club)}
                         </div>
                     </div>
                 </div>
@@ -444,9 +634,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
             document.getElementById('school-filter').addEventListener('change', filterClubs);
             document.getElementById('clear-filters').addEventListener('click', clearFilters);
         }
-
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', fetchClubs);
     </script>
 </body>
 </html>

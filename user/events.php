@@ -17,8 +17,60 @@ if ($conn->connect_error) {
     exit;
 }
 
+// Handle event registration
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register_event'])) {
+    $userId = $_SESSION['user_id'];
+    $eventId = $_POST['event_id'];
+    
+    // Check if user is already registered
+    $checkSql = "SELECT COUNT(*) as count FROM registre WHERE ID_EVENT = ? AND ID_MEMBER = ?";
+    $checkStmt = $conn->prepare($checkSql);
+    $checkStmt->bind_param("ii", $eventId, $userId);
+    $checkStmt->execute();
+    $existing = $checkStmt->get_result();
+    
+    if ($existing->fetch_assoc()["count"] > 0) {
+        echo json_encode(["success" => false, "message" => "You are already registered for this event"]);
+        exit;
+    }
+    
+    // Check if event is full
+    $capacitySql = "SELECT CAPACITY FROM evenement WHERE ID_EVENT = ?";
+    $capacityStmt = $conn->prepare($capacitySql);
+    $capacityStmt->bind_param("i", $eventId);
+    $capacityStmt->execute();
+    $capacityResult = $capacityStmt->get_result();
+    $capacity = $capacityResult->fetch_assoc()["CAPACITY"];
+    
+    $registeredSql = "SELECT COUNT(*) as count FROM registre WHERE ID_EVENT = ?";
+    $registeredStmt = $conn->prepare($registeredSql);
+    $registeredStmt->bind_param("i", $eventId);
+    $registeredStmt->execute();
+    $registeredResult = $registeredStmt->get_result();
+    $registered = $registeredResult->fetch_assoc()["count"];
+    
+    if ($registered >= $capacity) {
+        echo json_encode(["success" => false, "message" => "This event is already full"]);
+        exit;
+    }
+    
+    // Register user for event
+    $insertSql = "INSERT INTO registre (ID_EVENT, ID_MEMBER) VALUES (?, ?)";
+    $insertStmt = $conn->prepare($insertSql);
+    $insertStmt->bind_param("ii", $eventId, $userId);
+    
+    if ($insertStmt->execute()) {
+        echo json_encode(["success" => true, "message" => "Successfully registered for the event!"]);
+    } else {
+        echo json_encode(["success" => false, "message" => "Failed to register for the event"]);
+    }
+    exit;
+}
+
 // If AJAX request for events
 if (isset($_GET['action']) && $_GET['action'] === 'get_events') {
+    $userId = $_SESSION['user_id'];
+    
     $sql = "SELECT e.*, GROUP_CONCAT(t.TOPIC_NAME) as topics
             FROM evenement e
             LEFT JOIN contains c ON e.ID_EVENT = c.ID_EVENT
@@ -29,6 +81,22 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_events') {
 
     $events = [];
     while ($row = $result->fetch_assoc()) {
+        // Check if user is registered for this event
+        $registrationSql = "SELECT COUNT(*) as isRegistered FROM registre WHERE ID_EVENT = ? AND ID_MEMBER = ?";
+        $registrationStmt = $conn->prepare($registrationSql);
+        $registrationStmt->bind_param("ii", $row["ID_EVENT"], $userId);
+        $registrationStmt->execute();
+        $registrationResult = $registrationStmt->get_result();
+        $isRegistered = $registrationResult->fetch_assoc()["isRegistered"] > 0;
+        
+        // Get actual registration count
+        $registeredCountSql = "SELECT COUNT(*) as count FROM registre WHERE ID_EVENT = ?";
+        $registeredCountStmt = $conn->prepare($registeredCountSql);
+        $registeredCountStmt->bind_param("i", $row["ID_EVENT"]);
+        $registeredCountStmt->execute();
+        $registeredCountResult = $registeredCountStmt->get_result();
+        $registeredCount = $registeredCountResult->fetch_assoc()["count"];
+        
         $events[] = [
             "id" => $row["ID_EVENT"],
             "title" => $row["TITLE"],
@@ -36,13 +104,14 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_events') {
             "date" => $row["DATE"],
             "time" => $row["STARTING_TIME"] . ($row["ENDING_TIME"] ? ' - ' . $row["ENDING_TIME"] : ''),
             "location" => $row["LOCATION"],
-            "city" => $row["LOCATION"], // You may want to adjust this if you have a city field
+            "city" => $row["CITY"] ?: "Unknown City", // Use the actual CITY field from database
             "type" => $row["EVENT_TYPE"] ?: "Event",
             "capacity" => $row["CAPACITY"] ?: 0,
-            "registered" => 0, // You can fetch real count if you want
+            "registered" => $registeredCount,
             "price" => $row["PRICE"] ?: 0,
             "organizer" => "", // You can join with club/organizer if needed
-            "tags" => $row["topics"] ? explode(',', $row["topics"]) : []
+            "tags" => $row["topics"] ? explode(',', $row["topics"]) : [],
+            "isRegistered" => $isRegistered
         ];
     }
     header('Content-Type: application/json');
@@ -79,24 +148,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_events') {
 </head>
 <body class="bg-gray-custom">
     <!-- Navigation -->
-    <header class="bg-white py-4 px-6">
-        <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <!-- Logo -->
-            <div class="flex items-center space-x-3">
-                <img src="../static/images/mds logo.png" alt="MDS Logo" class="w-40 h-30 object-contain">
-            </div>
-            <!-- Navigation -->
-            <nav class="hidden md:flex items-center space-x-8">
-                <a href="home.html" class="text-brand-dark hover:text-brand-red transition-colors">Home Page</a>
-                <a href="events.php" class="text-brand-dark hover:text-brand-red transition-colors">Events</a>
-                <a href="clubs.php" class="text-brand-dark hover:text-brand-red transition-colors">Clubs</a>
-                <a href="contactus.html" class="text-brand-dark hover:text-brand-red transition-colors">Contact us</a>
-                <div class="flex space-x-2">
-                    <a href="../auth/logout.php" class="bg-brand-red text-white px-4 py-2 rounded-lg font-medium">Logout</a>
-                </div>
-            </nav>
-        </div>
-    </header>
+<?php include '../includes/header.php'; ?> 
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Header -->
@@ -369,7 +421,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_events') {
                                 </div>
                                 <div class="flex items-center text-gray-500 text-sm">
                                     <i class="fas fa-map-marker-alt mr-2"></i>
-                                    ${event.location}, ${event.city}
+                                    ${event.location}${event.city && event.city !== 'Unknown City' ? ', ' + event.city : ''}
                                 </div>
                                 <div class="flex items-center text-gray-500 text-sm">
                                     <i class="fas fa-users mr-2"></i>
@@ -397,9 +449,12 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_events') {
                                             ${event.price === 0 ? 'Free' : `${event.price} MAD`}
                                         </div>
                                     </div>
-                                    <button class="${isFull ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-red-custom text-white hover:bg-red-600'} px-4 py-2 rounded-lg text-sm font-medium transition-colors" ${isFull ? 'disabled' : ''}>
-                                        ${isFull ? 'Full' : 'Register'}
-                                    </button>
+                                    ${event.isRegistered ? 
+                                        '<button class="bg-green-100 text-green-800 px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed" disabled><i class="fas fa-check mr-1"></i>Registered</button>' :
+                                        `<button class="${isFull ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-red-custom text-white hover:bg-red-600'} px-4 py-2 rounded-lg text-sm font-medium transition-colors" ${isFull ? 'disabled' : ''} onclick="event.stopPropagation(); registerForEvent('${event.id}')">
+                                            ${isFull ? 'Full' : 'Register'}
+                                        </button>`
+                                    }
                                 </div>
                             </div>
                         </div>
@@ -477,6 +532,62 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_events') {
             document.getElementById('total-types').textContent = uniqueTypes.size;
         }
 
+        // Register for event function
+        function registerForEvent(eventId) {
+            const formData = new FormData();
+            formData.append('register_event', '1');
+            formData.append('event_id', eventId);
+            
+            fetch('events.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Refresh events to update registration status
+                    fetchEvents();
+                    showNotification(data.message, 'success');
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred while registering for the event.', 'error');
+            });
+        }
+        
+        // Show notification function
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 transition-all duration-300 transform translate-x-full`;
+            notification.className += type === 'success' ? ' bg-green-100 text-green-800 border border-green-200' : ' bg-red-100 text-red-800 border border-red-200';
+            
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} mr-2"></i>
+                    ${message}
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+        
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', fetchEvents);
     </script>
