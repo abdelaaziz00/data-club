@@ -2,9 +2,6 @@
 // Start session
 session_start();
 
-// Check if user is logged in - you may need to adjust this based on your authentication system
-
-
 // Database connection
 $host = "localhost";
 $user = "root";
@@ -20,6 +17,12 @@ if ($conn->connect_error) {
 
 // Handle join club request
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['join_club'])) {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        echo json_encode(["success" => false, "message" => "Please login first to join a club"]);
+        exit;
+    }
+    
     $userId = $_SESSION['user_id'];
     $clubId = $_POST['club_id'];
     
@@ -50,6 +53,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['join_club'])) {
 
 // Function to get user's join status for a club
 function getUserJoinStatus($conn, $userId, $clubId) {
+    if (!$userId) return null; // Not logged in
+    
     $sql = "SELECT ACCEPTED FROM requestjoin WHERE ID_MEMBER = ? AND ID_CLUB = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ii", $userId, $clubId);
@@ -66,7 +71,7 @@ function getUserJoinStatus($conn, $userId, $clubId) {
 
 // If AJAX request for clubs
 if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
-    $userId = $_SESSION['user_id'];
+    $userId = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
     
     $sql = "SELECT ID_CLUB, NAME, LOGO, DESCRIPTION, UNIVERSITY, CITY, EMAIL, CLUB_PHONE FROM club";
     $result = $conn->query($sql);
@@ -195,21 +200,21 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
                 <div class="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center mx-auto mb-4">
                     <i class="fas fa-users text-slate-custom text-xl"></i>
                 </div>
-                <h3 class="text-2xl font-bold text-black-custom" id="total-clubs">6</h3>
+                <h3 class="text-2xl font-bold text-black-custom" id="total-clubs">-</h3>
                 <p class="text-gray-600">Active Clubs</p>
             </div>
             <div class="bg-white rounded-xl shadow-sm p-6 text-center">
                 <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-4">
                     <i class="fas fa-map-marker-alt text-red-custom text-xl"></i>
                 </div>
-                <h3 class="text-2xl font-bold text-black-custom" id="total-cities">6</h3>
+                <h3 class="text-2xl font-bold text-black-custom" id="total-cities">-</h3>
                 <p class="text-gray-600">Cities</p>
             </div>
             <div class="bg-white rounded-xl shadow-sm p-6 text-center">
                 <div class="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center mx-auto mb-4">
                     <i class="fas fa-graduation-cap text-slate-custom text-xl"></i>
                 </div>
-                <h3 class="text-2xl font-bold text-black-custom" id="total-schools">6</h3>
+                <h3 class="text-2xl font-bold text-black-custom" id="total-schools">-</h3>
                 <p class="text-gray-600">Universities</p>
             </div>
         </div>
@@ -229,7 +234,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
                         class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom focus:border-transparent"
                     />
                 </div>
-
+                
                 <!-- Filters -->
                 <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                     <!-- City Filter -->
@@ -257,7 +262,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
         <!-- Results Count -->
         <div class="mb-6">
             <p class="text-gray-600" id="results-count">
-                Showing 6 of 6 clubs
+                Loading clubs...
             </p>
         </div>
 
@@ -275,63 +280,127 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
             <p class="text-gray-600">Try adjusting your search or filters to find more clubs.</p>
         </div>
     </main>
-    
-    <footer class="bg-brand-red text-white py-12 px-6">
-        <div class="max-w-7xl mx-auto">
-            <!-- Logo and Links -->
-            <div class="flex flex-col items-center mb-8">
-                <div class="flex items-center space-x-3 mb-6">
-                    <img src="../static/images/mds logo.png" alt="MDS Logo" class="w-40 h-30 object-contain">
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold text-black-custom">Login Required</h2>
+                    <button id="close-login-modal" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-                <!-- Navigation Links -->
-                <div class="flex space-x-8 mb-6">
-                    <a href="#" class="text-white/80 hover:text-white transition-colors">Home Page</a>
-                    <a href="#" class="text-white/80 hover:text-white transition-colors">Events List</a>
-                    <a href="#" class="text-white/80 hover:text-white transition-colors">clubs list</a>
-                    <a href="#" class="text-white/80 hover:text-white transition-colors">Contact Us</a>
-                </div>
-                <!-- Social Links -->
-                <div class="flex space-x-8">
-                    <a href="#" class="text-white/80 hover:text-white transition-colors">Instagram Page</a>
-                    <a href="#" class="text-white/80 hover:text-white transition-colors">LinkedIn Page</a>
-                </div>
-            </div>
-            <!-- Bottom Line -->
-            <div class="border-t border-white/20 pt-6">
-                <div class="flex justify-between items-center text-sm">
-                    <p class="text-white/80">© 2025 DataClub. All rights reserved.</p>
-                    <div class="flex space-x-6">
-                        <a href="#" class="text-white/80 hover:text-white transition-colors">Privacy Policy</a>
-                        <a href="#" class="text-white/80 hover:text-white transition-colors">Terms of Service</a>
-                        <a href="#" class="text-white/80 hover:text-white transition-colors">Cookie Settings</a>
-                    </div>
+                <p class="text-gray-600 mb-6">
+                    You need to be logged in to join clubs. Please login to your account first.
+                </p>
+                <div class="flex space-x-3">
+                    <a href="../auth/login.php" class="flex-1 bg-slate-custom text-white py-2 rounded-lg text-center hover:bg-slate-700 transition-colors">
+                        Login
+                    </a>
+                    <button id="cancel-login" class="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </button>
                 </div>
             </div>
         </div>
-    </footer>
-    
+    </div>
+
     <script>
         let clubs = [];
         let filteredClubs = [];
+        let isLoggedIn = <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>;
 
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', () => {
             fetchClubs();
             setupJoinClubHandlers();
+            setupAnimations();
         });
+        
+        // Setup animations
+        function setupAnimations() {
+            // Animate stats on load
+            animateStats();
+            
+            // Add scroll animations
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animate-fade-in');
+                    }
+                });
+            }, observerOptions);
+            
+            // Observe elements for animation
+            document.querySelectorAll('.animate-on-scroll').forEach(el => {
+                observer.observe(el);
+            });
+        }
+        
+        // Animate statistics
+        function animateStats() {
+            const stats = [
+                { element: document.getElementById('total-clubs'), value: 0 },
+                { element: document.getElementById('total-cities'), value: 0 },
+                { element: document.getElementById('total-schools'), value: 0 }
+            ];
+            
+            stats.forEach((stat, index) => {
+                setTimeout(() => {
+                    const finalValue = parseInt(stat.element.textContent) || 0;
+                    animateNumber(stat.element, 0, finalValue, 1000);
+                }, index * 200);
+            });
+        }
+        
+        // Animate number counting
+        function animateNumber(element, start, end, duration) {
+            const startTime = performance.now();
+            const difference = end - start;
+            
+            function updateNumber(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Easing function for smooth animation
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                const current = Math.floor(start + (difference * easeOut));
+                
+                element.textContent = current;
+                
+                if (progress < 1) {
+                    requestAnimationFrame(updateNumber);
+                }
+            }
+            
+            requestAnimationFrame(updateNumber);
+        }
         
         // Render join button based on user status
         function renderJoinButton(club) {
-            if (!club.userJoinStatus) {
+            if (!isLoggedIn) {
                 return `
-                    <button class="join-club-btn bg-red-custom text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-600 transition-colors" data-club-id="${club.id}">
+                    <button class="join-club-btn bg-red-custom text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-600 transition-all duration-300 transform hover:scale-105 hover:shadow-lg" data-club-id="${club.id}">
+                        <i class="fas fa-plus mr-1"></i>
+                        Join Club
+                    </button>
+                `;
+            } else if (!club.userJoinStatus) {
+                return `
+                    <button class="join-club-btn bg-red-custom text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-600 transition-all duration-300 transform hover:scale-105 hover:shadow-lg" data-club-id="${club.id}">
                         <i class="fas fa-plus mr-1"></i>
                         Join Club
                     </button>
                 `;
             } else if (club.userJoinStatus === 'pending') {
                 return `
-                    <button class="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed" disabled>
+                    <button class="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed animate-pulse" disabled>
                         <i class="fas fa-clock mr-1"></i>
                         Request Pending
                     </button>
@@ -353,7 +422,12 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
                     e.stopPropagation(); // Prevent card click
                     const button = e.target.classList.contains('join-club-btn') ? e.target : e.target.closest('.join-club-btn');
                     const clubId = button.getAttribute('data-club-id');
-                    joinClub(clubId, button);
+                    
+                    if (!isLoggedIn) {
+                        showLoginModal();
+                    } else {
+                        joinClub(clubId, button);
+                    }
                 }
             });
         }
@@ -377,7 +451,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
                 if (data.success) {
                     // Update button to show pending status
                     buttonElement.outerHTML = `
-                        <button class="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed" disabled>
+                        <button class="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed animate-pulse" disabled>
                             <i class="fas fa-clock mr-1"></i>
                             Request Pending
                         </button>
@@ -422,7 +496,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
             setTimeout(() => {
                 notification.classList.remove('translate-x-full');
             }, 100);
-            
+
             // Auto remove after 5 seconds
             setTimeout(() => {
                 notification.classList.add('translate-x-full');
@@ -450,7 +524,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
                     document.getElementById('clubs-container').innerHTML = '<p class="text-red-500 col-span-full text-center">Failed to load clubs. Please try again later.</p>';
                 });
         }
-        
+
         // Update statistics function
         function updateStatistics(statistics) {
             document.getElementById('total-clubs').textContent = statistics.totalClubs;
@@ -462,20 +536,20 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
         function populateFilters() {
             const cities = [...new Set(clubs.map(club => club.city))].sort();
             const schools = [...new Set(clubs.map(club => club.school))].sort();
-
+            
             const cityFilter = document.getElementById('city-filter');
             const schoolFilter = document.getElementById('school-filter');
 
             cityFilter.innerHTML = '<option value="">All Cities</option>';
             schoolFilter.innerHTML = '<option value="">All Schools</option>';
-
+            
             cities.forEach(city => {
                 const option = document.createElement('option');
                 option.value = city;
                 option.textContent = city;
                 cityFilter.appendChild(option);
             });
-
+            
             schools.forEach(school => {
                 const option = document.createElement('option');
                 option.value = school;
@@ -489,31 +563,33 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
             const container = document.getElementById('clubs-container');
             const noResults = document.getElementById('no-results');
             const resultsCount = document.getElementById('results-count');
-
+            
             if (filteredClubs.length === 0) {
                 container.classList.add('hidden');
                 noResults.classList.remove('hidden');
                 resultsCount.textContent = 'No clubs found';
                 return;
             }
-
+            
             container.classList.remove('hidden');
             noResults.classList.add('hidden');
             resultsCount.textContent = `Showing ${filteredClubs.length} of ${clubs.length} clubs`;
-
-            container.innerHTML = filteredClubs.map(club => `
-                <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group">
+            
+            container.innerHTML = filteredClubs.map((club, index) => `
+                <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-500 overflow-hidden group cursor-pointer animate-on-scroll opacity-0 transform translate-y-4" 
+                     style="animation-delay: ${index * 100}ms; animation-fill-mode: forwards;" 
+                     onclick="viewClub('${club.id}')">
                     <div class="p-6">
                         <div class="flex items-start justify-between mb-4">
-                            <div class="flex items-center space-x-4 cursor-pointer" onclick="viewClub('${club.id}')">
-                                <div class="w-16 h-16 bg-gradient-to-br from-slate-custom to-slate-700 rounded-xl flex items-center justify-center text-white font-bold text-xl overflow-hidden">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-16 h-16 bg-gradient-to-br from-slate-custom to-slate-700 rounded-xl flex items-center justify-center text-white font-bold text-xl overflow-hidden transform transition-transform duration-300 group-hover:scale-110">
                                     ${club.logo.includes('../static/images/') ? 
                                         `<img src="${club.logo}" alt="${club.name}" class="w-full h-full object-cover">` : 
                                         club.logo
                                     }
                                 </div>
                                 <div>
-                                    <h3 class="text-xl font-bold text-black-custom group-hover:text-slate-custom transition-colors">
+                                    <h3 class="text-xl font-bold text-black-custom group-hover:text-slate-custom transition-colors duration-300">
                                         ${club.name}
                                     </h3>
                                     <div class="flex items-center space-x-4 mt-2">
@@ -529,16 +605,15 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
                                 </div>
                             </div>
                         </div>
-
-                        <div class="cursor-pointer" onclick="viewClub('${club.id}')">
+                        
+                        <div class="cursor-pointer">
                             <p class="text-gray-600 text-sm mb-4 line-clamp-3">
                                 ${club.description}
                             </p>
 
-                            <!-- Focus Areas -->
                             <div class="flex flex-wrap gap-2 mb-4">
                                 ${club.focusAreas.slice(0, 3).map(area => `
-                                    <span class="px-2 py-1 bg-slate-100 text-slate-custom text-xs rounded-full">
+                                    <span class="px-2 py-1 bg-slate-100 text-slate-custom text-xs rounded-full transition-all duration-300 hover:bg-slate-200 hover:scale-105">
                                         ${area}
                                     </span>
                                 `).join('')}
@@ -554,13 +629,13 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
                                 <span><i class="fas fa-calendar mr-1"></i>Est. ${club.established}</span>
                             </div>
                         </div>
-
+                        
                         <div class="flex items-center justify-between">
                             <div class="flex space-x-2">
                                 ${Object.entries(club.social).map(([platform, url]) => 
                                     url ? `
                                         <a href="${url}" target="_blank" rel="noopener noreferrer" 
-                                           class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-red-custom hover:bg-red-50 hover:text-red-600 transition-colors"
+                                           class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-red-custom hover:bg-red-50 hover:text-red-600 transition-all duration-300 transform hover:scale-110"
                                            onclick="event.stopPropagation()">
                                             <i class="fab fa-${platform}"></i>
                                         </a>
@@ -573,6 +648,14 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
                     </div>
                 </div>
             `).join('');
+            
+            // Add animation classes after rendering
+            setTimeout(() => {
+                document.querySelectorAll('.animate-on-scroll').forEach((el, index) => {
+                    el.style.animationDelay = `${index * 100}ms`;
+                    el.classList.add('animate-fade-in');
+                });
+            }, 100);
         }
 
         // Filter clubs
@@ -590,10 +673,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
 
                 const matchesCity = selectedCity === '' || club.city === selectedCity;
                 const matchesSchool = selectedSchool === '' || club.school === selectedSchool;
-
+                
                 return matchesSearch && matchesCity && matchesSchool;
             });
-
+            
             renderClubs();
             updateClearButton();
         }
@@ -634,6 +717,79 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
             document.getElementById('school-filter').addEventListener('change', filterClubs);
             document.getElementById('clear-filters').addEventListener('click', clearFilters);
         }
+
+        // Login modal functions
+        function showLoginModal() {
+            document.getElementById('login-modal').classList.remove('hidden');
+        }
+
+        function hideLoginModal() {
+            document.getElementById('login-modal').classList.add('hidden');
+        }
+
+        // Modal event listeners
+        document.getElementById('close-login-modal').addEventListener('click', hideLoginModal);
+        document.getElementById('cancel-login').addEventListener('click', hideLoginModal);
+        
+        // Close modal when clicking outside
+        document.getElementById('login-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideLoginModal();
+            }
+        });
     </script>
+
+    <style>
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-fade-in {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+        
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        /* Smooth hover effects */
+        .hover-lift {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Pulse animation for pending requests */
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+        
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
 </body>
 </html>

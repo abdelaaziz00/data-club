@@ -30,22 +30,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
 
 // Handle club creation request
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_club_request'])) {
-    $club_name = $_POST['club_name'];
-    $school = $_POST['school'];
-    $city = $_POST['city'];
-    $expected_members = $_POST['expected_members'];
-    $description = $_POST['description'];
-    $motivation = $_POST['motivation'];
-    $phone = $_POST['phone'];
-    $instagram = $_POST['instagram'];
+    // Check if user already has a pending request
+    $stmt = $pdo->prepare("SELECT COUNT(*) as pending_count FROM clubcreationrequest WHERE ID_MEMBER = ? AND STATUS = 'pending'");
+    $stmt->execute([$user_id]);
+    $pending_count = $stmt->fetch(PDO::FETCH_ASSOC)['pending_count'];
     
-    // Get selected focus areas
-    $focus_areas = isset($_POST['focus_areas']) ? implode(',', $_POST['focus_areas']) : '';
-    
-    $stmt = $pdo->prepare("INSERT INTO clubcreationrequest (ID_MEMBER, CLUB_NAME, DESCRIPTION, TEAM_MEMBERS, SOCIAL_LINKS, STATUS, UNIVERSITY) VALUES (?, ?, ?, ?, ?, 'pending', ?)");
-    $stmt->execute([$user_id, $club_name, $description . ' | Motivation: ' . $motivation . ' | Focus: ' . $focus_areas . ' | Phone: ' . $phone . ' | Instagram: ' . $instagram, $expected_members, $instagram, $school]);
-    
-    $club_request_message = "Club creation request submitted successfully!";
+    if ($pending_count > 0) {
+        $club_request_message = "You already have a pending club creation request. Please wait for admin approval.";
+    } else {
+        $club_name = $_POST['club_name'];
+        $university = $_POST['university'];
+        $city = $_POST['city'];
+        $team_members = $_POST['team_members'];
+        $description = $_POST['description'];
+        $motif = $_POST['motif'];
+        $phone = $_POST['phone'];
+        $email = $_POST['email'];
+        $instagram = $_POST['instagram'];
+        $linkedin = $_POST['linkedin'];
+        
+        // Insert club creation request
+        $stmt = $pdo->prepare("INSERT INTO clubcreationrequest (ID_MEMBER, CLUB_NAME, DESCRIPTION, TEAM_MEMBERS, STATUS, UNIVERSITY, CITY, INSTAGRAM_LINK, LINKEDIN_LINK, EMAIL, CLUB_PHONE, MOTIF) VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$user_id, $club_name, $description, $team_members, $university, $city, $instagram, $linkedin, $email, $phone, $motif]);
+        
+        $request_id = $pdo->lastInsertId();
+        
+        // Handle selected focus areas (topics)
+        if (isset($_POST['focus_areas']) && is_array($_POST['focus_areas'])) {
+            foreach ($_POST['focus_areas'] as $topic_id) {
+                $stmt = $pdo->prepare("INSERT INTO willfocus (ID_REQUEST, TOPIC_ID) VALUES (?, ?)");
+                $stmt->execute([$request_id, $topic_id]);
+            }
+        }
+        
+        $club_request_message = "Club creation request submitted successfully!";
+    }
 }
 
 // Handle withdraw request
@@ -103,6 +122,11 @@ $clubs_part_of = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Calculate member since date (assuming registration date is when the member was created)
 $member_since = "January 2023"; // You might want to add a registration_date column to track this properly
+
+// Fetch all topics for the club creation form
+$stmt = $pdo->prepare("SELECT * FROM topics ORDER BY TOPIC_NAME");
+$stmt->execute();
+$topics = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -491,8 +515,8 @@ $member_since = "January 2023"; // You might want to add a registration_date col
                             <input type="text" name="club_name" placeholder="e.g., Data Science Club" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom" required>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">School *</label>
-                            <input type="text" name="school" placeholder="e.g., Mohammed V University" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom" required>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">University *</label>
+                            <input type="text" name="university" placeholder="e.g., Mohammed V University" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom" required>
                         </div>
                     </div>
                     
@@ -502,8 +526,8 @@ $member_since = "January 2023"; // You might want to add a registration_date col
                             <input type="text" name="city" placeholder="e.g., Rabat" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom" required>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Expected Members</label>
-                            <input type="number" name="expected_members" placeholder="e.g., 50" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Expected Team Members</label>
+                            <input type="number" name="team_members" placeholder="e.g., 50" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom">
                         </div>
                     </div>
                     
@@ -515,41 +539,27 @@ $member_since = "January 2023"; // You might want to add a registration_date col
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Focus Areas *</label>
                         <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                            <?php foreach ($topics as $topic): ?>
                             <label class="flex items-center">
-                                <input type="checkbox" name="focus_areas[]" value="Machine Learning" class="mr-2 text-slate-custom focus:ring-slate-custom">
-                                <span class="text-sm">Machine Learning</span>
+                                <input type="checkbox" name="focus_areas[]" value="<?php echo $topic['TOPIC_ID']; ?>" class="mr-2 text-slate-custom focus:ring-slate-custom">
+                                <span class="text-sm"><?php echo htmlspecialchars($topic['TOPIC_NAME']); ?></span>
                             </label>
-                            <label class="flex items-center">
-                                <input type="checkbox" name="focus_areas[]" value="Data Science" class="mr-2 text-slate-custom focus:ring-slate-custom">
-                                <span class="text-sm">Data Science</span>
-                            </label>
-                            <label class="flex items-center">
-                                <input type="checkbox" name="focus_areas[]" value="AI Research" class="mr-2 text-slate-custom focus:ring-slate-custom">
-                                <span class="text-sm">AI Research</span>
-                            </label>
-                            <label class="flex items-center">
-                                <input type="checkbox" name="focus_areas[]" value="Web Development" class="mr-2 text-slate-custom focus:ring-slate-custom">
-                                <span class="text-sm">Web Development</span>
-                            </label>
-                            <label class="flex items-center">
-                                <input type="checkbox" name="focus_areas[]" value="Cybersecurity" class="mr-2 text-slate-custom focus:ring-slate-custom">
-                                <span class="text-sm">Cybersecurity</span>
-                            </label>
-                            <label class="flex items-center">
-                                <input type="checkbox" name="focus_areas[]" value="Other" class="mr-2 text-slate-custom focus:ring-slate-custom">
-                                <span class="text-sm">Other</span>
-                            </label>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Why do you want to start this club? *</label>
-                        <textarea name="motivation" rows="3" placeholder="Tell us about your motivation and vision..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom" required></textarea>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Motif (Why do you want to start this club?) *</label>
+                        <textarea name="motif" rows="3" placeholder="Tell us about your motivation and vision..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom" required></textarea>
                     </div>
                     
                     <div class="bg-gray-50 rounded-lg p-4">
                         <h3 class="font-medium text-black-custom mb-2">Contact Information</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                                <input type="email" name="email" placeholder="club@university.edu" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom" required>
+                            </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
                                 <input type="tel" name="phone" placeholder="+212 6XX XXX XXX" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom">
@@ -557,6 +567,10 @@ $member_since = "January 2023"; // You might want to add a registration_date col
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Instagram Profile</label>
                                 <input type="text" name="instagram" placeholder="@username" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">LinkedIn Profile</label>
+                                <input type="text" name="linkedin" placeholder="linkedin.com/in/username" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom">
                             </div>
                         </div>
                     </div>
@@ -627,6 +641,265 @@ $member_since = "January 2023"; // You might want to add a registration_date col
                 clubCreationModal.classList.add('hidden');
             }
         });
+
+        // Add animations on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            setupProfileAnimations();
+        });
+
+        // Setup profile animations
+        function setupProfileAnimations() {
+            // Animate profile header
+            const profileHeader = document.querySelector('.bg-gradient-to-r');
+            if (profileHeader) {
+                profileHeader.style.opacity = '0';
+                profileHeader.style.transform = 'translateY(-20px)';
+                setTimeout(() => {
+                    profileHeader.style.transition = 'all 0.8s ease-out';
+                    profileHeader.style.opacity = '1';
+                    profileHeader.style.transform = 'translateY(0)';
+                }, 100);
+            }
+
+            // Animate profile avatar
+            const profileAvatar = document.querySelector('.w-32.h-32');
+            if (profileAvatar) {
+                profileAvatar.style.opacity = '0';
+                profileAvatar.style.transform = 'scale(0.8)';
+                setTimeout(() => {
+                    profileAvatar.style.transition = 'all 0.6s ease-out';
+                    profileAvatar.style.opacity = '1';
+                    profileAvatar.style.transform = 'scale(1)';
+                }, 300);
+            }
+
+            // Animate cards with stagger
+            const cards = document.querySelectorAll('.bg-white.rounded-xl');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s ease-out';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 500 + (index * 150));
+            });
+
+            // Animate stats with fallback
+            const stats = document.querySelectorAll('.text-2xl.font-bold');
+            stats.forEach((stat, index) => {
+                const finalValue = parseInt(stat.textContent) || 0;
+                if (finalValue > 0) {
+                    const originalValue = stat.textContent;
+                    stat.textContent = '0';
+                    setTimeout(() => {
+                        animateNumber(stat, 0, finalValue, 1000);
+                    }, 800 + (index * 200));
+                    
+                    // Fallback: restore original value after 3 seconds if animation fails
+                    setTimeout(() => {
+                        if (stat.textContent === '0') {
+                            stat.textContent = originalValue;
+                        }
+                    }, 3000);
+                }
+            });
+        }
+
+        // Animate number counting
+        function animateNumber(element, start, end, duration) {
+            if (!element || start === end) return;
+            
+            const startTime = performance.now();
+            const difference = end - start;
+            
+            function updateNumber(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Easing function for smooth animation
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                const current = Math.floor(start + (difference * easeOut));
+                
+                if (element && element.textContent !== undefined) {
+                    element.textContent = current;
+                }
+                
+                if (progress < 1) {
+                    requestAnimationFrame(updateNumber);
+                } else {
+                    // Ensure final value is set correctly
+                    if (element) {
+                        element.textContent = end;
+                    }
+                }
+            }
+            
+            requestAnimationFrame(updateNumber);
+        }
     </script>
+
+    <style>
+        /* Smooth hover effects for cards */
+        .bg-white.rounded-xl {
+            transition: all 0.3s ease;
+        }
+        
+        .bg-white.rounded-xl:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Profile avatar hover effect */
+        .w-32.h-32 {
+            transition: all 0.3s ease;
+        }
+        
+        .w-32.h-32:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Button hover effects */
+        .bg-slate-custom, .bg-red-custom {
+            transition: all 0.3s ease;
+        }
+        
+        .bg-slate-custom:hover, .bg-red-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Social media icons hover */
+        .w-8.h-8 {
+            transition: all 0.3s ease;
+        }
+        
+        .w-8.h-8:hover {
+            transform: scale(1.1);
+            background-color: rgba(240, 84, 84, 0.1) !important;
+        }
+
+        /* Club cards hover effects */
+        .border.border-gray-200.rounded-lg {
+            transition: all 0.3s ease;
+        }
+        
+        .border.border-gray-200.rounded-lg:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-color: #30475E;
+        }
+
+        /* Event cards hover effects */
+        .border.border-gray-200.rounded-lg.p-4 {
+            transition: all 0.3s ease;
+        }
+        
+        .border.border-gray-200.rounded-lg.p-4:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-color: #F05454;
+        }
+
+        /* Modal animations */
+        .fixed.inset-0 {
+            transition: opacity 0.3s ease;
+        }
+        
+        .bg-white.rounded-xl.shadow-xl {
+            transition: all 0.3s ease;
+            transform: scale(0.9);
+            opacity: 0;
+        }
+        
+        .fixed.inset-0:not(.hidden) .bg-white.rounded-xl.shadow-xl {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        /* Form input focus effects */
+        input, textarea, select {
+            transition: all 0.3s ease;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(48, 71, 94, 0.1);
+        }
+
+        /* Checkbox hover effects */
+        input[type="checkbox"] {
+            transition: all 0.3s ease;
+        }
+        
+        input[type="checkbox"]:hover {
+            transform: scale(1.1);
+        }
+
+        /* Status badges hover effects */
+        .px-3.py-1.rounded-full {
+            transition: all 0.3s ease;
+        }
+        
+        .px-3.py-1.rounded-full:hover {
+            transform: scale(1.05);
+        }
+
+        /* Gradient background animation */
+        .bg-gradient-to-r.from-slate-custom.to-slate-700 {
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Pulse animation for pending requests */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        /* Smooth transitions for all interactive elements */
+        * {
+            transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        /* Enhanced focus states */
+        button:focus, a:focus {
+            outline: 2px solid #F05454;
+            outline-offset: 2px;
+        }
+
+        /* Loading animation for buttons */
+        .loading {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+    </style>
 </body>
 </html>

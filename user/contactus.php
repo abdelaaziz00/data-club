@@ -492,6 +492,275 @@ require_once 'db.php';
                 }
             });
         });
+
+        // Add animations on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            setupContactAnimations();
+        });
+
+        // Setup contact page animations
+        function setupContactAnimations() {
+            // Animate header
+            const header = document.querySelector('.text-center.mb-16');
+            if (header) {
+                header.style.opacity = '0';
+                header.style.transform = 'translateY(-20px)';
+                setTimeout(() => {
+                    header.style.transition = 'all 0.8s ease-out';
+                    header.style.opacity = '1';
+                    header.style.transform = 'translateY(0)';
+                }, 100);
+            }
+
+            // Animate form and contact cards with stagger
+            const cards = document.querySelectorAll('.bg-white.rounded-xl');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s ease-out';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 300 + (index * 200));
+            });
+
+            // Animate FAQ section
+            const faqSection = document.querySelector('.bg-white.rounded-xl.shadow-lg.p-8');
+            if (faqSection) {
+                faqSection.style.opacity = '0';
+                faqSection.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    faqSection.style.transition = 'all 0.6s ease-out';
+                    faqSection.style.opacity = '1';
+                    faqSection.style.transform = 'translateY(0)';
+                }, 800);
+            }
+
+            // Animate CTA section
+            const ctaSection = document.querySelector('.text-center.mt-16');
+            if (ctaSection) {
+                ctaSection.style.opacity = '0';
+                ctaSection.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    ctaSection.style.transition = 'all 0.6s ease-out';
+                    ctaSection.style.opacity = '1';
+                    ctaSection.style.transform = 'translateY(0)';
+                }, 1000);
+            }
+        }
     </script>
+
+    <style>
+        /* Smooth hover effects for cards */
+        .bg-white.rounded-xl {
+            transition: all 0.3s ease;
+        }
+        
+        .bg-white.rounded-xl:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Form input hover and focus effects */
+        input, textarea, select {
+            transition: all 0.3s ease;
+        }
+        
+        input:hover, textarea:hover, select:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(48, 71, 94, 0.1);
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(48, 71, 94, 0.15);
+        }
+
+        /* Button hover effects */
+        .bg-red-custom, .bg-slate-custom {
+            transition: all 0.3s ease;
+        }
+        
+        .bg-red-custom:hover, .bg-slate-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Social media icons hover effects */
+        .w-8.h-8 {
+            transition: all 0.3s ease;
+        }
+        
+        .w-8.h-8:hover {
+            transform: scale(1.1);
+            background-color: rgba(240, 84, 84, 0.2) !important;
+        }
+
+        /* Contact info icons hover effects */
+        .w-10.h-10 {
+            transition: all 0.3s ease;
+        }
+        
+        .w-10.h-10:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* FAQ button hover effects */
+        .faq-button {
+            transition: all 0.3s ease;
+        }
+        
+        .faq-button:hover {
+            background-color: rgba(48, 71, 94, 0.05) !important;
+            transform: translateX(4px);
+        }
+
+        /* FAQ content animation */
+        .faq-content {
+            transition: all 0.3s ease;
+            max-height: 0;
+            overflow: hidden;
+        }
+        
+        .faq-content:not(.hidden) {
+            max-height: 200px;
+        }
+
+        /* FAQ icon rotation animation */
+        .faq-button i {
+            transition: transform 0.3s ease;
+        }
+
+        /* Contact info links hover effects */
+        a[href^="mailto:"], a[href^="tel:"], a[href^="http"] {
+            transition: all 0.3s ease;
+        }
+        
+        a[href^="mailto:"]:hover, a[href^="tel:"]:hover, a[href^="http"]:hover {
+            transform: translateX(4px);
+        }
+
+        /* CTA section hover effects */
+        .bg-slate-custom.rounded-xl {
+            transition: all 0.3s ease;
+        }
+        
+        .bg-slate-custom.rounded-xl:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Footer links hover effects */
+        footer a {
+            transition: all 0.3s ease;
+        }
+        
+        footer a:hover {
+            transform: translateY(-1px);
+        }
+
+        /* Form submit button loading animation */
+        .loading {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        /* Success message animation */
+        .success-message {
+            animation: slideInRight 0.5s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Gradient background animation for CTA */
+        .bg-slate-custom {
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Smooth transitions for all interactive elements */
+        * {
+            transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        /* Enhanced focus states */
+        button:focus, a:focus, input:focus, textarea:focus, select:focus {
+            outline: 2px solid #F05454;
+            outline-offset: 2px;
+        }
+
+        /* Card entrance animation */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease-out;
+        }
+        
+        .animate-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Hover lift effect for cards */
+        .hover-lift {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Pulse animation for important elements */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        /* Scale animation for interactive elements */
+        .scale-on-hover {
+            transition: transform 0.3s ease;
+        }
+        
+        .scale-on-hover:hover {
+            transform: scale(1.05);
+        }
+    </style>
 </body>
 </html>

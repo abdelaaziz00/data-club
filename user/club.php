@@ -49,6 +49,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['join_club'])) {
 
 // Function to get user's join status for a club
 function getUserJoinStatus($conn, $userId, $clubId) {
+    if (!$userId) {
+        return null; // User not logged in
+    }
+    
     $sql = "SELECT ACCEPTED FROM requestjoin WHERE ID_MEMBER = ? AND ID_CLUB = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ii", $userId, $clubId);
@@ -66,7 +70,7 @@ function getUserJoinStatus($conn, $userId, $clubId) {
 // If AJAX request for club data
 if (isset($_GET['action']) && $_GET['action'] === 'get_club') {
     $clubId = $_GET['id'] ?? null;
-    $userId = $_SESSION['user_id'];
+    $userId = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
     
     if (!$clubId) {
         http_response_code(400);
@@ -107,6 +111,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_club') {
     $events = [];
     while ($event = $eventResult->fetch_assoc()) {
         $events[] = [
+            "id" => $event["ID_EVENT"],
             "title" => $event["TITLE"],
             "date" => $event["DATE"],
             "type" => $event["EVENT_TYPE"] ?: "Event",
@@ -182,7 +187,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_club') {
         "logo" => $club["LOGO"] ? "../static/images/" . $club["LOGO"] : substr($club["NAME"], 0, 2),
         "memberCount" => count($members),
         "established" => "2020", // You can add this field to your database
-        "website" => "https://" . strtolower(str_replace(" ", "", $club["NAME"])) . ".ma",
+        "website" => $club["EMAIL"] ? "https://" . strtolower(str_replace(" ", "", $club["NAME"])) . ".ma" : "",
         "email" => $club["EMAIL"] ?: "contact@" . strtolower(str_replace(" ", "", $club["NAME"])) . ".ma",
         "phone" => $club["CLUB_PHONE"] ?: "+212 5XX XX XX XX",
         "address" => $club["UNIVERSITY"] . ", " . $club["CITY"],
@@ -598,6 +603,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_club') {
                                             <a href="tel:${club.phone}" class="text-slate-custom hover:underline">${club.phone}</a>
                                         </div>
                                     </div>
+                                    ${club.website ? `
                                     <div class="flex items-start space-x-3">
                                         <i class="fas fa-globe text-slate-custom mt-1"></i>
                                         <div>
@@ -605,6 +611,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_club') {
                                             <a href="${club.website}" target="_blank" class="text-slate-custom hover:underline">${club.website}</a>
                                         </div>
                                     </div>
+                                    ` : ''}
                                     <div class="flex items-start space-x-3">
                                         <i class="fas fa-map-marker-alt text-slate-custom mt-1"></i>
                                         <div>
@@ -646,7 +653,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_club') {
                             day: 'numeric' 
                         })}
                     </div>
-                    <button class="w-full bg-red-custom text-white py-2 rounded-lg hover:bg-red-600 transition-colors">
+                    <button onclick="window.location.href='event.php?id=${event.id}'" class="w-full bg-red-custom text-white py-2 rounded-lg hover:bg-red-600 transition-colors">
                         Learn More
                     </button>
                 </div>

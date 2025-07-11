@@ -211,45 +211,56 @@ function formatDate($date) {
 
             <!-- Registrations Management -->
             <div class="lg:col-span-2">
-                <div class="bg-white rounded-xl shadow-md p-6">
-                    <div class="flex items-center justify-between mb-6">
-                        <h2 class="text-xl font-bold text-black-custom">Event Registrations</h2>
+                <div class="bg-white rounded-2xl shadow-xl p-8">
+                    <div class="flex items-center justify-between mb-8">
+                        <h2 class="text-2xl font-bold text-black-custom">Event Registrations</h2>
                         <div class="text-sm text-gray-600">
                             Total: <?= $total_registrations ?> registrations
                         </div>
                     </div>
 
                     <?php if (empty($registrations)): ?>
-                        <div class="text-center py-8">
-                            <i class="fas fa-users text-gray-300 text-4xl mb-4"></i>
+                        <div class="text-center py-12">
+                            <i class="fas fa-users text-gray-300 text-5xl mb-4"></i>
                             <p class="text-gray-500">No registrations yet.</p>
                         </div>
                     <?php else: ?>
-                        <div class="space-y-3" id="registrations-list">
-                            <?php foreach ($registrations as $registration): ?>
-                                <div class="registration-item border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center space-x-4">
-                                            <div class="w-12 h-12 bg-gradient-to-br from-slate-custom to-slate-700 rounded-full flex items-center justify-center text-white font-bold">
-                                                <?= strtoupper(substr($registration['FIRST_NAME'], 0, 1) . substr($registration['LAST_NAME'], 0, 1)) ?>
-                                            </div>
-                                            <div>
-                                                <h3 class="font-medium text-black-custom">
+                        <div class="overflow-y-auto" style="max-height: 420px;">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50 sticky top-0 z-10">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Contact</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-100">
+                                    <?php foreach ($registrations as $registration): ?>
+                                        <tr class="hover:bg-gray-50 transition-colors">
+                                            <td class="px-6 py-4 whitespace-nowrap flex items-center space-x-3">
+                                                <div class="w-10 h-10 bg-gradient-to-br from-slate-custom to-slate-700 rounded-full flex items-center justify-center text-white font-bold">
+                                                    <?= strtoupper(substr($registration['FIRST_NAME'], 0, 1) . substr($registration['LAST_NAME'], 0, 1)) ?>
+                                                </div>
+                                                <span class="font-medium text-black-custom">
                                                     <?= htmlspecialchars($registration['FIRST_NAME'] . ' ' . $registration['LAST_NAME']) ?>
-                                                </h3>
-                                                <p class="text-sm text-gray-600"><?= htmlspecialchars($registration['EMAIL']) ?></p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center space-x-3">
-                                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Registered</span>
-                                            <button class="w-8 h-8 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors" title="Contact Member">
-                                                <i class="fas fa-envelope text-sm"></i>
-                                            </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-gray-700">
+                                                <?= htmlspecialchars($registration['EMAIL']) ?>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Registered</span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <a href="mailto:<?= htmlspecialchars($registration['EMAIL']) ?>" class="w-8 h-8 bg-red-100 text-red-600 rounded-lg flex items-center justify-center hover:bg-red-200 transition-colors" title="Contact Member">
+                                                    <i class="fas fa-envelope text-sm"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
                         </div>
                     <?php endif; ?>
                 </div>

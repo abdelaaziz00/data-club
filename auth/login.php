@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $messageType = 'error';
         } else {
             // Check admin table
-            $stmt = $conn->prepare('SELECT ID_ADMIN, PASSWORD FROM admin WHERE EMAIL = ?');
+            $stmt = $conn->prepare('SELECT ID_ADMIN, FIRST_NAME, LAST_NAME, PASSWORD FROM admin WHERE EMAIL = ?');
             if (!$stmt) {
                 $message = 'Prepare failed (admin): ' . $conn->error;
                 $messageType = 'error';
@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 } else {
                     // Not found in admin, check member
-                    $stmt2 = $conn->prepare('SELECT ID_MEMBER, PASSWORD FROM member WHERE EMAIL = ?');
+                    $stmt2 = $conn->prepare('SELECT ID_MEMBER, FIRST_NAME, LAST_NAME, PASSWORD FROM member WHERE EMAIL = ?');
                     if (!$stmt2) {
                         $message = 'Prepare failed (member): ' . $conn->error;
                         $messageType = 'error';
@@ -70,8 +70,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 // Regenerate session ID for security
                                 session_regenerate_id(true);
                                 $_SESSION['user_id'] = $row2['ID_MEMBER'];
-                                $_SESSION['first_name'] = $row['FIRST_NAME'] ;
-                                $_SESSION['last_name'] = $row['LAST_NAME'] ;
+                                $_SESSION['first_name'] = $row2['FIRST_NAME'] ;
+                                $_SESSION['last_name'] = $row2['LAST_NAME'] ;
                                 $_SESSION['privilege'] = 2;
                                 $_SESSION['login_time'] = time();
                                 $message = 'Member login successful! Redirecting...';

@@ -128,12 +128,24 @@ $member_growth = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        .analytics-page {
+            min-height: 100vh;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+    </style>
 </head>
 <body class="bg-gray-custom">
     <!-- Navigation -->
 <?php include '../includes/header.php'; ?> 
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="analytics-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Header -->
         <div class="mb-8">
             <div class="flex items-center mb-4">
@@ -211,12 +223,15 @@ $member_growth = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </div>
 
+        <!-- Charts Section -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             <!-- Event Types Chart -->
             <div class="bg-white rounded-xl shadow-md p-6">
                 <h3 class="text-lg font-bold text-black-custom mb-4">Event Types Distribution</h3>
                 <?php if (!empty($event_types)): ?>
-                    <canvas id="eventTypesChart" width="400" height="200"></canvas>
+                    <div class="chart-container">
+                        <canvas id="eventTypesChart"></canvas>
+                    </div>
                 <?php else: ?>
                     <div class="text-center py-8">
                         <i class="fas fa-chart-pie text-gray-400 text-4xl mb-4"></i>
@@ -229,7 +244,9 @@ $member_growth = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="bg-white rounded-xl shadow-md p-6">
                 <h3 class="text-lg font-bold text-black-custom mb-4">Monthly Event Activity</h3>
                 <?php if (!empty($monthly_events)): ?>
-                    <canvas id="monthlyEventsChart" width="400" height="200"></canvas>
+                    <div class="chart-container">
+                        <canvas id="monthlyEventsChart"></canvas>
+                    </div>
                 <?php else: ?>
                     <div class="text-center py-8">
                         <i class="fas fa-chart-line text-gray-400 text-4xl mb-4"></i>
