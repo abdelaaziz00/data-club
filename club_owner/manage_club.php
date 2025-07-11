@@ -25,6 +25,59 @@ if (!$club) {
     exit();
 }
 
+// Handle manual logo deletion (for debugging)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_logo'])) {
+    if ($club['LOGO'] && !empty($club['LOGO'])) {
+        $old_logo_path = '../static/images/' . $club['LOGO'];
+        if (file_exists($old_logo_path)) {
+            $delete_result = unlink($old_logo_path);
+            if ($delete_result) {
+                $success_message = "Logo file deleted successfully!";
+            } else {
+                $error_message = "Failed to delete logo file.";
+            }
+        } else {
+            $error_message = "Logo file not found.";
+        }
+    }
+}
+
+// Handle logo upload separately
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_logo'])) {
+    if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
+        $upload_dir = '../static/images/';
+        $original_filename = $_FILES['logo']['name'];
+        $file_extension = strtolower(pathinfo($original_filename, PATHINFO_EXTENSION));
+        
+        // Check if file is an image
+        $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif'];
+        if (in_array($file_extension, $allowed_extensions)) {
+            // Use original filename
+            $new_filename = $original_filename;
+            $upload_path = $upload_dir . $new_filename;
+            
+            if (move_uploaded_file($_FILES['logo']['tmp_name'], $upload_path)) {
+                // Update database with logo filename
+                $stmt = $pdo->prepare("UPDATE club SET LOGO = ? WHERE ID_CLUB = ?");
+                $stmt->execute([$new_filename, $club['ID_CLUB']]);
+                
+                $success_message = "Logo uploaded successfully!";
+                
+                // Refresh club data
+                $stmt = $pdo->prepare("SELECT * FROM club WHERE ID_CLUB = ?");
+                $stmt->execute([$club['ID_CLUB']]);
+                $club = $stmt->fetch(PDO::FETCH_ASSOC);
+            } else {
+                $error_message = "Failed to upload logo. Please try again.";
+            }
+        } else {
+            $error_message = "Invalid file type. Please upload JPG, PNG, or GIF files only.";
+        }
+    } else {
+        $error_message = "Please select a file to upload.";
+    }
+}
+
 // Handle club update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_club'])) {
     $name = $_POST['name'];
@@ -36,10 +89,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_club'])) {
     $instagram = $_POST['instagram'];
     $linkedin = $_POST['linkedin'];
     
-    $stmt = $pdo->prepare("UPDATE club SET NAME = ?, UNIVERSITY = ?, CITY = ?, DESCRIPTION = ?, EMAIL = ?, CLUB_PHONE = ?, INSTAGRAM_LINK = ?, LINKEDIN_LINK = ? WHERE ID_CLUB = ?");
-    $stmt->execute([$name, $university, $city, $description, $email, $phone, $instagram, $linkedin, $club['ID_CLUB']]);
+    // Handle logo upload
+    $logo_filename = $club['LOGO']; // Keep existing logo filename by default
     
-    $success_message = "Club information updated successfully!";
+    if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
+        $upload_dir = '../static/images/';
+        $original_filename = $_FILES['logo']['name'];
+        $file_extension = strtolower(pathinfo($original_filename, PATHINFO_EXTENSION));
+        
+        // Check if file is an image
+        $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif'];
+        if (in_array($file_extension, $allowed_extensions)) {
+            // Use original filename or generate unique one if needed
+            $new_filename = $original_filename;
+            $upload_path = $upload_dir . $new_filename;
+            
+            if (move_uploaded_file($_FILES['logo']['tmp_name'], $upload_path)) {
+                // Delete old logo file if it exists
+                if ($club['LOGO'] && !empty($club['LOGO'])) {
+                    $old_logo_path = $upload_dir . $club['LOGO'];
+                    if (file_exists($old_logo_path)) {
+                        $delete_result = unlink($old_logo_path);
+                        if (!$delete_result) {
+                            $error_message = "Warning: Could not delete old logo file.";
+                        }
+                    }
+                }
+                
+                $logo_filename = $new_filename;  // Save only filename to database
+                $success_message = "Club information and logo updated successfully!";
+            } else {
+                $error_message = "Failed to upload logo. Please try again.";
+            }
+        } else {
+            $error_message = "Invalid file type. Please upload JPG, PNG, or GIF files only.";
+        }
+    }
+    
+    // Update database
+    $stmt = $pdo->prepare("UPDATE club SET NAME = ?, UNIVERSITY = ?, CITY = ?, DESCRIPTION = ?, EMAIL = ?, CLUB_PHONE = ?, INSTAGRAM_LINK = ?, LINKEDIN_LINK = ?, LOGO = ? WHERE ID_CLUB = ?");
+    $stmt->execute([$name, $university, $city, $description, $email, $phone, $instagram, $linkedin, $logo_filename, $club['ID_CLUB']]);
+    
+    if (!isset($success_message)) {
+        $success_message = "Club information updated successfully!";
+    }
     
     // Refresh club data
     $stmt = $pdo->prepare("SELECT * FROM club WHERE ID_CLUB = ?");
@@ -122,11 +215,30 @@ $all_topics = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
         <?php endif; ?>
 
+        <!-- Error Message -->
+        <?php if (isset($error_message)): ?>
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+                <?php echo $error_message; ?>
+            </div>
+        <?php endif; ?>
+
+        <!-- Debug Info (remove this after testing) -->
+        <?php if (isset($_GET['debug'])): ?>
+            <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-6">
+                <strong>Debug Info:</strong><br>
+                Club ID: <?php echo $club['ID_CLUB']; ?><br>
+                Current Logo: <?php echo $club['LOGO'] ?: 'NULL'; ?><br>
+                Logo File Exists: <?php echo file_exists('../static/images/' . $club['LOGO']) ? 'Yes' : 'No'; ?><br>
+                Upload Directory: <?php echo realpath('../static/images/'); ?><br>
+                Directory Writable: <?php echo is_writable('../static/images/') ? 'Yes' : 'No'; ?>
+            </div>
+        <?php endif; ?>
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Main Form -->
             <div class="lg:col-span-2">
                 <div class="bg-white rounded-xl shadow-md p-6">
-                    <form method="POST" class="space-y-6">
+                    <form method="POST" enctype="multipart/form-data" class="space-y-6">
                         <!-- Basic Information -->
                         <div>
                             <h2 class="text-xl font-bold text-black-custom mb-4">Basic Information</h2>
@@ -221,14 +333,38 @@ $all_topics = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <div class="bg-white rounded-xl shadow-md p-6">
                     <h3 class="text-lg font-bold text-black-custom mb-4">Club Logo</h3>
                     <div class="text-center">
-                        <div class="w-24 h-24 bg-gradient-to-br from-slate-custom to-slate-700 rounded-xl flex items-center justify-center text-white font-bold text-3xl mx-auto mb-4">
-                            <?php echo strtoupper(substr($club['NAME'], 0, 2)); ?>
-                        </div>
-                        <button class="bg-red-custom text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors text-sm">
-                            <i class="fas fa-upload mr-2"></i>
-                            Upload New Logo
-                        </button>
+                        <?php if ($club['LOGO'] && !empty($club['LOGO'])): ?>
+                            <img src="../static/images/<?php echo htmlspecialchars($club['LOGO']); ?>" 
+                                 alt="Club Logo" 
+                                 class="w-24 h-24 rounded-xl object-cover mx-auto mb-4 border-2 border-gray-200">
+                        <?php else: ?>
+                            <div class="w-24 h-24 bg-gradient-to-br from-slate-custom to-slate-700 rounded-xl flex items-center justify-center text-white font-bold text-3xl mx-auto mb-4">
+                                <?php echo strtoupper(substr($club['NAME'], 0, 2)); ?>
+                            </div>
+                        <?php endif; ?>
+                        
+                        <!-- Separate Logo Upload Form -->
+                        <form method="POST" enctype="multipart/form-data" class="mt-4">
+                            <input type="file" name="logo" accept="image/*" class="hidden" id="logo-upload" onchange="previewLogo(this)">
+                            <label for="logo-upload" class="bg-red-custom text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors text-sm cursor-pointer inline-block">
+                                <i class="fas fa-upload mr-2"></i>
+                                Upload New Logo
+                            </label>
+                            <button type="submit" name="upload_logo" class="bg-slate-custom text-white px-4 py-2 rounded-lg hover:bg-slate-700 transition-colors text-sm ml-2">
+                                <i class="fas fa-save mr-2"></i>
+                                Save Logo
+                            </button>
+                        </form>
                         <p class="text-xs text-gray-500 mt-2">Recommended: 200x200px, PNG or JPG</p>
+                        
+                        <!-- Debug: Manual Delete Button (remove after testing) -->
+                        <?php if (isset($_GET['debug']) && $club['LOGO']): ?>
+                            <form method="POST" class="mt-2">
+                                <button type="submit" name="delete_logo" class="bg-red-500 text-white px-3 py-1 rounded text-xs">
+                                    Delete Current Logo
+                                </button>
+                            </form>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -278,10 +414,28 @@ $all_topics = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </main>
 
     <script>
-        // Logo upload simulation
-        document.querySelector('button[class*="bg-red-custom"]').addEventListener('click', () => {
-            alert('Logo upload functionality would be implemented here');
-        });
+        // Logo preview functionality
+        function previewLogo(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const logoContainer = document.querySelector('.text-center');
+                    const existingImg = logoContainer.querySelector('img');
+                    const existingDiv = logoContainer.querySelector('.bg-gradient-to-br');
+                    
+                    if (existingImg) {
+                        existingImg.src = e.target.result;
+                    } else if (existingDiv) {
+                        const newImg = document.createElement('img');
+                        newImg.src = e.target.result;
+                        newImg.alt = 'Club Logo';
+                        newImg.className = 'w-24 h-24 rounded-xl object-cover mx-auto mb-4 border-2 border-gray-200';
+                        existingDiv.parentNode.replaceChild(newImg, existingDiv);
+                    }
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
     </script>
 </body>
 </html>
