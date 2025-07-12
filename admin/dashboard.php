@@ -512,8 +512,14 @@ $processed_requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <?php foreach (array_slice($clubs, 0, 5) as $club): ?>
                                 <div class="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors duration-300">
                                     <div class="flex items-center space-x-3">
-                                        <div class="w-12 h-12 bg-gradient-to-br from-slate-custom to-slate-700 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg">
-                                            <?php echo strtoupper(substr($club['NAME'], 0, 2)); ?>
+                                        <div class="w-12 h-12 bg-gradient-to-br from-slate-custom to-slate-700 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg overflow-hidden">
+                                            <?php if ($club['LOGO']): ?>
+                                                <img src="../static/images/<?php echo htmlspecialchars($club['LOGO']); ?>" 
+                                                     alt="Club Logo" 
+                                                     class="w-full h-full object-cover">
+                                            <?php else: ?>
+                                                <?php echo strtoupper(substr($club['NAME'], 0, 2)); ?>
+                                            <?php endif; ?>
                                         </div>
                                         <div>
                                             <h4 class="font-semibold text-black-custom"><?php echo htmlspecialchars($club['NAME']); ?></h4>
@@ -586,8 +592,14 @@ $processed_requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <tr class="hover:bg-gray-50 transition-colors duration-200">
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="flex items-center">
-                                                <div class="w-12 h-12 bg-gradient-to-br from-slate-custom to-slate-700 rounded-xl flex items-center justify-center text-white font-bold text-sm mr-4 shadow-lg">
-                                                    <?php echo strtoupper(substr($club['NAME'], 0, 2)); ?>
+                                                <div class="w-12 h-12 bg-gradient-to-br from-slate-custom to-slate-700 rounded-xl flex items-center justify-center text-white font-bold text-sm mr-4 shadow-lg overflow-hidden">
+                                                    <?php if ($club['LOGO']): ?>
+                                                        <img src="../static/images/<?php echo htmlspecialchars($club['LOGO']); ?>" 
+                                                             alt="Club Logo" 
+                                                             class="w-full h-full object-cover">
+                                                    <?php else: ?>
+                                                        <?php echo strtoupper(substr($club['NAME'], 0, 2)); ?>
+                                                    <?php endif; ?>
                                                 </div>
                                                 <div>
                                                     <div class="text-sm font-semibold text-gray-900"><?php echo htmlspecialchars($club['NAME']); ?></div>

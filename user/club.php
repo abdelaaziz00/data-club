@@ -135,7 +135,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_club') {
         $members[] = [
             "name" => $adminMember["FIRST_NAME"] . " " . $adminMember["LAST_NAME"],
             "role" => "Admin",
-            "avatar" => substr($adminMember["FIRST_NAME"], 0, 1) . substr($adminMember["LAST_NAME"], 0, 1),
+            "avatar" => $adminMember["PROFILE_IMG"] ? "../static/images/" . $adminMember["PROFILE_IMG"] : substr($adminMember["FIRST_NAME"], 0, 1) . substr($adminMember["LAST_NAME"], 0, 1),
+            "avatarType" => $adminMember["PROFILE_IMG"] ? "image" : "text",
             "email" => $adminMember["EMAIL"]
         ];
     }
@@ -152,7 +153,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_club') {
             $members[] = [
                 "name" => $otherMember["FIRST_NAME"] . " " . $otherMember["LAST_NAME"],
                 "role" => "Member",
-                "avatar" => substr($otherMember["FIRST_NAME"], 0, 1) . substr($otherMember["LAST_NAME"], 0, 1),
+                "avatar" => $otherMember["PROFILE_IMG"] ? "../static/images/" . $otherMember["PROFILE_IMG"] : substr($otherMember["FIRST_NAME"], 0, 1) . substr($otherMember["LAST_NAME"], 0, 1),
+                "avatarType" => $otherMember["PROFILE_IMG"] ? "image" : "text",
                 "email" => $otherMember["EMAIL"]
             ];
         }
@@ -185,6 +187,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_club') {
         "description" => $club["DESCRIPTION"],
         "fullDescription" => $club["DESCRIPTION"] . "\n\nThis club is dedicated to advancing knowledge and skills in data science and related fields. We welcome students from all backgrounds who are passionate about technology and innovation.",
         "logo" => $club["LOGO"] ? "../static/images/" . $club["LOGO"] : substr($club["NAME"], 0, 2),
+        "logoType" => $club["LOGO"] ? "image" : "text",
         "memberCount" => count($members),
         "established" => "2020", // You can add this field to your database
         "website" => $club["EMAIL"] ? "https://" . strtolower(str_replace(" ", "", $club["NAME"])) . ".ma" : "",
@@ -671,9 +674,12 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_club') {
 
             container.innerHTML = members.map(member => `
                 <div class="bg-white rounded-xl shadow-md p-6 text-center hover:shadow-lg transition-shadow">
-                    <div class="w-16 h-16 bg-gradient-to-br from-slate-custom to-slate-700 rounded-full flex items-center justify-center text-white font-bold text-lg mx-auto mb-4">
-                        ${member.avatar}
-                    </div>
+                                    <div class="w-16 h-16 bg-gradient-to-br from-slate-custom to-slate-700 rounded-full flex items-center justify-center text-white font-bold text-lg mx-auto mb-4 overflow-hidden">
+                    ${member.avatarType === 'image' ? 
+                        `<img src="${member.avatar}" alt="${member.name}" class="w-full h-full object-cover">` : 
+                        member.avatar
+                    }
+                </div>
                     <h3 class="text-lg font-bold text-black-custom mb-1">${member.name}</h3>
                     <p class="text-gray-500 text-sm">${member.role}</p>
                 </div>

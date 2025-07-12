@@ -122,6 +122,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_clubs') {
             "city" => $row["CITY"],
             "description" => $row["DESCRIPTION"],
             "logo" => $row["LOGO"] ? "../static/images/" . $row["LOGO"] : substr($row["NAME"], 0, 2),
+            "logoType" => $row["LOGO"] ? "image" : "text",
             "memberCount" => $memberCount,
             "established" => "2020", // Add if you have this info
             "focusAreas" => $topics ?: ["Data Science", "Machine Learning", "Analytics"],

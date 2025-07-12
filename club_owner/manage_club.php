@@ -25,6 +25,111 @@ if (!$club) {
     exit();
 }
 
+// Handle logo upload
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_logo'])) {
+    $upload_dir = '../static/images/';
+    
+    // Create directory if it doesn't exist
+    if (!file_exists($upload_dir)) {
+        if (!mkdir($upload_dir, 0755, true)) {
+            $error_message = "Failed to create upload directory.";
+            return;
+        }
+    }
+    
+    // Check if directory is writable
+    if (!is_writable($upload_dir)) {
+        $error_message = "Upload directory is not writable.";
+        return;
+    }
+    
+    if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
+        $file = $_FILES['logo'];
+        $file_name = $file['name'];
+        $file_size = $file['size'];
+        $file_tmp = $file['tmp_name'];
+        $file_type = $file['type'];
+        
+        // Get file extension
+        $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+        
+        // Allowed file types
+        $allowed_types = array('jpg', 'jpeg', 'png', 'gif');
+        
+        // Validation
+        $errors = array();
+        
+        if (!in_array($file_ext, $allowed_types)) {
+            $errors[] = "Only JPG, JPEG, PNG & GIF files are allowed.";
+        }
+        
+        if ($file_size > 2097152) { // 2MB limit
+            $errors[] = "File size must be less than 2MB.";
+        }
+        
+        // Additional security checks
+        if ($file_size === 0) {
+            $errors[] = "The uploaded file is empty.";
+        }
+        
+        // Check if file is actually an image
+        $image_info = getimagesize($file_tmp);
+        if ($image_info === false) {
+            $errors[] = "The uploaded file is not a valid image.";
+        }
+        
+        if (empty($errors)) {
+            // Generate unique filename
+            $new_file_name = 'club_logo_' . $club['ID_CLUB'] . '_' . time() . '.' . $file_ext;
+            $upload_path = $upload_dir . $new_file_name;
+            
+            if (move_uploaded_file($file_tmp, $upload_path)) {
+                // Delete old logo if exists
+                if ($club['LOGO'] && file_exists($upload_dir . $club['LOGO'])) {
+                    unlink($upload_dir . $club['LOGO']);
+                }
+                
+                // Update database
+                $stmt = $pdo->prepare("UPDATE club SET LOGO = ? WHERE ID_CLUB = ?");
+                $stmt->execute([$new_file_name, $club['ID_CLUB']]);
+                
+                $success_message = "Club logo uploaded successfully!";
+                
+                // Refresh club data
+                $stmt = $pdo->prepare("SELECT * FROM club WHERE ID_CLUB = ?");
+                $stmt->execute([$club['ID_CLUB']]);
+                $club = $stmt->fetch(PDO::FETCH_ASSOC);
+            } else {
+                $error_message = "Failed to upload file.";
+            }
+        } else {
+            $error_message = implode(" ", $errors);
+        }
+    } else {
+        $error_message = "Please select a file to upload.";
+    }
+}
+
+// Handle logo removal
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['remove_logo'])) {
+    $upload_dir = '../static/images/';
+    
+    if ($club['LOGO'] && file_exists($upload_dir . $club['LOGO'])) {
+        unlink($upload_dir . $club['LOGO']);
+    }
+    
+    // Update database
+    $stmt = $pdo->prepare("UPDATE club SET LOGO = NULL WHERE ID_CLUB = ?");
+    $stmt->execute([$club['ID_CLUB']]);
+    
+    $success_message = "Club logo removed successfully!";
+    
+    // Refresh club data
+    $stmt = $pdo->prepare("SELECT * FROM club WHERE ID_CLUB = ?");
+    $stmt->execute([$club['ID_CLUB']]);
+    $club = $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
 // Handle club update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_club'])) {
     $name = $_POST['name'];
@@ -119,6 +224,13 @@ $all_topics = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <?php if (isset($success_message)): ?>
             <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
                 <?php echo $success_message; ?>
+            </div>
+        <?php endif; ?>
+
+        <!-- Error Message -->
+        <?php if (isset($error_message)): ?>
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+                <?php echo $error_message; ?>
             </div>
         <?php endif; ?>
 
@@ -221,14 +333,45 @@ $all_topics = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <div class="bg-white rounded-xl shadow-md p-6">
                     <h3 class="text-lg font-bold text-black-custom mb-4">Club Logo</h3>
                     <div class="text-center">
-                        <div class="w-24 h-24 bg-gradient-to-br from-slate-custom to-slate-700 rounded-xl flex items-center justify-center text-white font-bold text-3xl mx-auto mb-4">
-                            <?php echo strtoupper(substr($club['NAME'], 0, 2)); ?>
-                        </div>
-                        <button class="bg-red-custom text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors text-sm">
-                            <i class="fas fa-upload mr-2"></i>
-                            Upload New Logo
-                        </button>
-                        <p class="text-xs text-gray-500 mt-2">Recommended: 200x200px, PNG or JPG</p>
+                        <?php if ($club['LOGO']): ?>
+                            <div class="w-24 h-24 mx-auto mb-4">
+                                <img src="../static/images/<?php echo htmlspecialchars($club['LOGO']); ?>" 
+                                     alt="Club Logo" 
+                                     class="w-full h-full object-cover rounded-xl">
+                            </div>
+                        <?php else: ?>
+                            <div class="w-24 h-24 bg-gradient-to-br from-slate-custom to-slate-700 rounded-xl flex items-center justify-center text-white font-bold text-3xl mx-auto mb-4">
+                                <?php echo strtoupper(substr($club['NAME'], 0, 2)); ?>
+                            </div>
+                        <?php endif; ?>
+                        
+                        <!-- Logo Preview Container -->
+                        <div id="logo-preview"></div>
+                        
+                        <form method="POST" enctype="multipart/form-data" class="space-y-3">
+                            <div class="relative">
+                                <input type="file" name="logo" id="logo" accept="image/*" class="hidden" onchange="updateFileName(this)">
+                                <label for="logo" class="bg-red-custom text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors text-sm cursor-pointer inline-block">
+                                    <i class="fas fa-upload mr-2"></i>
+                                    Choose File
+                                </label>
+                                <span id="file-name" class="text-xs text-gray-500 ml-2"></span>
+                            </div>
+                            <button type="submit" name="upload_logo" class="bg-slate-custom text-white px-4 py-2 rounded-lg hover:bg-slate-700 transition-colors text-sm w-full">
+                                <i class="fas fa-save mr-2"></i>
+                                Upload Logo
+                            </button>
+                        </form>
+                        
+                        <?php if ($club['LOGO']): ?>
+                            <form method="POST" class="mt-3">
+                                <button type="submit" name="remove_logo" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors text-sm w-full">
+                                    <i class="fas fa-trash mr-2"></i>
+                                    Remove Logo
+                                </button>
+                            </form>
+                        <?php endif; ?>
+                        <p class="text-xs text-gray-500 mt-2">Recommended: 200x200px, PNG or JPG (max 2MB)</p>
                     </div>
                 </div>
 
@@ -278,10 +421,33 @@ $all_topics = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </main>
 
     <script>
-        // Logo upload simulation
-        document.querySelector('button[class*="bg-red-custom"]').addEventListener('click', () => {
-            alert('Logo upload functionality would be implemented here');
-        });
+        // Show selected filename and preview
+        function updateFileName(input) {
+            const fileName = input.files[0]?.name;
+            const fileNameSpan = document.getElementById('file-name');
+            const previewContainer = document.getElementById('logo-preview');
+            
+            if (fileName) {
+                fileNameSpan.textContent = fileName;
+                
+                // Create preview
+                const file = input.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewContainer.innerHTML = `
+                            <div class="w-24 h-24 mx-auto mb-4">
+                                <img src="${e.target.result}" alt="Preview" class="w-full h-full object-cover rounded-xl">
+                            </div>
+                        `;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            } else {
+                fileNameSpan.textContent = '';
+                previewContainer.innerHTML = '';
+            }
+        }
     </script>
 </body>
 </html>

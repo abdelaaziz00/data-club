@@ -10,6 +10,109 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
+// Handle profile picture upload
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_profile_picture'])) {
+    $upload_dir = '../static/images/';
+    
+    // Create directory if it doesn't exist
+    if (!file_exists($upload_dir)) {
+        if (!mkdir($upload_dir, 0755, true)) {
+            $error_message = "Failed to create upload directory.";
+        }
+    }
+    
+    // Check if directory is writable
+    if (!is_writable($upload_dir)) {
+        $error_message = "Upload directory is not writable.";
+    }
+    
+    if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
+        $file = $_FILES['profile_picture'];
+        $file_name = $file['name'];
+        $file_size = $file['size'];
+        $file_tmp = $file['tmp_name'];
+        $file_type = $file['type'];
+        
+        // Get file extension
+        $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+        
+        // Allowed file types
+        $allowed_types = array('jpg', 'jpeg', 'png', 'gif');
+        
+        // Validation
+        $errors = array();
+        
+        if (!in_array($file_ext, $allowed_types)) {
+            $errors[] = "Only JPG, JPEG, PNG & GIF files are allowed.";
+        }
+        
+        if ($file_size > 2097152) { // 2MB limit
+            $errors[] = "File size must be less than 2MB.";
+        }
+        
+        // Additional security checks
+        if ($file_size === 0) {
+            $errors[] = "The uploaded file is empty.";
+        }
+        
+        // Check if file is actually an image
+        $image_info = getimagesize($file_tmp);
+        if ($image_info === false) {
+            $errors[] = "The uploaded file is not a valid image.";
+        }
+        
+        if (empty($errors)) {
+            // Generate unique filename
+            $new_file_name = 'profile_picture_' . $user_id . '_' . time() . '.' . $file_ext;
+            $upload_path = $upload_dir . $new_file_name;
+            
+            if (move_uploaded_file($file_tmp, $upload_path)) {
+                // Delete old profile picture if exists
+                if ($user['PROFILE_IMG'] && file_exists($upload_dir . $user['PROFILE_IMG'])) {
+                    unlink($upload_dir . $user['PROFILE_IMG']);
+                }
+                
+                // Update database
+                $stmt = $pdo->prepare("UPDATE member SET PROFILE_IMG = ? WHERE ID_MEMBER = ?");
+                $stmt->execute([$new_file_name, $user_id]);
+                
+                $success_message = "Profile picture uploaded successfully!";
+                
+                // Refresh user data
+                $stmt = $pdo->prepare("SELECT * FROM member WHERE ID_MEMBER = ?");
+                $stmt->execute([$user_id]);
+                $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            } else {
+                $error_message = "Failed to upload file.";
+            }
+        } else {
+            $error_message = implode(" ", $errors);
+        }
+    } else {
+        $error_message = "Please select a file to upload.";
+    }
+}
+
+// Handle profile picture removal
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['remove_profile_picture'])) {
+    $upload_dir = '../static/images/';
+    
+    if ($user['PROFILE_IMG'] && file_exists($upload_dir . $user['PROFILE_IMG'])) {
+        unlink($upload_dir . $user['PROFILE_IMG']);
+    }
+    
+    // Update database
+    $stmt = $pdo->prepare("UPDATE member SET PROFILE_IMG = NULL WHERE ID_MEMBER = ?");
+    $stmt->execute([$user_id]);
+    
+    $success_message = "Profile picture removed successfully!";
+    
+    // Refresh user data
+    $stmt = $pdo->prepare("SELECT * FROM member WHERE ID_MEMBER = ?");
+    $stmt->execute([$user_id]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
 // Handle profile update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     $first_name = $_POST['first_name'];
@@ -121,7 +224,7 @@ $stmt->execute([$user_id]);
 $clubs_part_of = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Calculate member since date (assuming registration date is when the member was created)
-$member_since = "January 2023"; // You might want to add a registration_date column to track this properly
+ // You might want to add a registration_date column to track this properly
 
 // Fetch all topics for the club creation form
 $stmt = $pdo->prepare("SELECT * FROM topics ORDER BY TOPIC_NAME");
@@ -164,6 +267,13 @@ $topics = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
         <?php endif; ?>
 
+        <!-- Error Messages -->
+        <?php if (isset($error_message)): ?>
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                <?php echo $error_message; ?>
+            </div>
+        <?php endif; ?>
+
         <?php if (isset($club_request_message)): ?>
             <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4">
                 <?php echo $club_request_message; ?>
@@ -182,11 +292,17 @@ $topics = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <div class="absolute -bottom-16 left-8">
                     <div class="relative">
                         <div class="w-32 h-32 bg-white rounded-full p-2 shadow-lg">
-                            <div class="w-full h-full bg-gradient-to-br from-slate-custom to-slate-700 rounded-full flex items-center justify-center text-white font-bold text-4xl">
-                                <?php echo strtoupper(substr($user['FIRST_NAME'], 0, 1) . substr($user['LAST_NAME'], 0, 1)); ?>
-                            </div>
+                            <?php if ($user['PROFILE_IMG']): ?>
+                                <img src="../static/images/<?php echo htmlspecialchars($user['PROFILE_IMG']); ?>" 
+                                     alt="Profile Picture" 
+                                     class="w-full h-full object-cover rounded-full">
+                            <?php else: ?>
+                                <div class="w-full h-full bg-gradient-to-br from-slate-custom to-slate-700 rounded-full flex items-center justify-center text-white font-bold text-4xl">
+                                    <?php echo strtoupper(substr($user['FIRST_NAME'], 0, 1) . substr($user['LAST_NAME'], 0, 1)); ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
-                        <button class="absolute bottom-2 right-2 w-8 h-8 bg-red-custom text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors">
+                        <button onclick="document.getElementById('profile-picture-input').click()" class="absolute bottom-2 right-2 w-8 h-8 bg-red-custom text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors">
                             <i class="fas fa-camera text-sm"></i>
                         </button>
                     </div>
@@ -198,10 +314,7 @@ $topics = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="mb-4 lg:mb-0">
                         <h1 class="text-3xl font-bold text-black-custom mb-2"><?php echo htmlspecialchars($user['FIRST_NAME'] . ' ' . $user['LAST_NAME']); ?></h1>
                         <p class="text-gray-600 mb-2"><?php echo htmlspecialchars($user['EMAIL']); ?></p>
-                        <div class="flex items-center text-sm text-gray-500">
-                            <i class="fas fa-calendar mr-2"></i>
-                            Member since <?php echo $member_since; ?>
-                        </div>
+
                     </div>
                     <button id="edit-profile-btn" class="bg-slate-custom text-white px-6 py-3 rounded-lg font-medium hover:bg-slate-700 transition-colors">
                         <i class="fas fa-edit mr-2"></i>
@@ -210,6 +323,11 @@ $topics = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
             </div>
         </div>
+
+        <!-- Hidden Profile Picture Upload Form -->
+        <form id="profile-picture-form" method="POST" enctype="multipart/form-data" class="hidden">
+            <input type="file" id="profile-picture-input" name="profile_picture" accept="image/*" onchange="uploadProfilePicture()">
+        </form>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Left Column - Profile Details -->
@@ -247,8 +365,14 @@ $topics = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <?php foreach ($clubs_part_of as $club): ?>
                                 <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                                     <div class="flex items-center space-x-3">
-                                        <div class="w-12 h-12 bg-gradient-to-br from-slate-custom to-slate-700 rounded-lg flex items-center justify-center text-white font-bold">
-                                            <?php echo strtoupper(substr($club['NAME'], 0, 2)); ?>
+                                        <div class="w-12 h-12 bg-gradient-to-br from-slate-custom to-slate-700 rounded-lg flex items-center justify-center text-white font-bold overflow-hidden">
+                                            <?php if ($club['LOGO']): ?>
+                                                <img src="../static/images/<?php echo htmlspecialchars($club['LOGO']); ?>" 
+                                                     alt="Club Logo" 
+                                                     class="w-full h-full object-cover">
+                                            <?php else: ?>
+                                                <?php echo strtoupper(substr($club['NAME'], 0, 2)); ?>
+                                            <?php endif; ?>
                                         </div>
                                         <div class="flex-1">
                                             <h3 class="font-medium text-black-custom"><?php echo htmlspecialchars($club['NAME']); ?></h3>
@@ -289,8 +413,14 @@ $topics = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         
                         <div class="p-6">
                             <div class="flex items-start space-x-6 mb-6">
-                                <div class="w-20 h-20 bg-gradient-to-br from-slate-custom to-slate-700 rounded-xl flex items-center justify-center text-white font-bold text-2xl">
-                                    <?php echo strtoupper(substr($my_club['NAME'], 0, 2)); ?>
+                                <div class="w-20 h-20 bg-gradient-to-br from-slate-custom to-slate-700 rounded-xl flex items-center justify-center text-white font-bold text-2xl overflow-hidden">
+                                    <?php if ($my_club['LOGO']): ?>
+                                        <img src="../static/images/<?php echo htmlspecialchars($my_club['LOGO']); ?>" 
+                                             alt="Club Logo" 
+                                             class="w-full h-full object-cover">
+                                    <?php else: ?>
+                                        <?php echo strtoupper(substr($my_club['NAME'], 0, 2)); ?>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="flex-1">
                                     <h3 class="text-2xl font-bold text-black-custom mb-2"><?php echo htmlspecialchars($my_club['NAME']); ?></h3>
@@ -736,6 +866,24 @@ $topics = $stmt->fetchAll(PDO::FETCH_ASSOC);
             }
             
             requestAnimationFrame(updateNumber);
+        }
+
+        // Profile picture upload function
+        function uploadProfilePicture() {
+            const input = document.getElementById('profile-picture-input');
+            const form = document.getElementById('profile-picture-form');
+            
+            if (input.files && input.files[0]) {
+                // Add upload button to form
+                const uploadButton = document.createElement('input');
+                uploadButton.type = 'hidden';
+                uploadButton.name = 'upload_profile_picture';
+                uploadButton.value = '1';
+                form.appendChild(uploadButton);
+                
+                // Submit the form
+                form.submit();
+            }
         }
     </script>
 

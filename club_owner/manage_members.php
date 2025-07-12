@@ -142,8 +142,14 @@ $pending_requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <?php foreach ($members as $member): ?>
                             <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
                                 <div class="flex items-center space-x-4">
-                                    <div class="w-12 h-12 bg-gradient-to-br from-slate-custom to-slate-700 rounded-full flex items-center justify-center text-white font-bold">
-                                        <?php echo strtoupper(substr($member['FIRST_NAME'], 0, 1) . substr($member['LAST_NAME'], 0, 1)); ?>
+                                    <div class="w-12 h-12 bg-gradient-to-br from-slate-custom to-slate-700 rounded-full flex items-center justify-center text-white font-bold overflow-hidden">
+                                        <?php if ($member['PROFILE_IMG']): ?>
+                                            <img src="../static/images/<?php echo htmlspecialchars($member['PROFILE_IMG']); ?>" 
+                                                 alt="Profile Picture" 
+                                                 class="w-full h-full object-cover">
+                                        <?php else: ?>
+                                            <?php echo strtoupper(substr($member['FIRST_NAME'], 0, 1) . substr($member['LAST_NAME'], 0, 1)); ?>
+                                        <?php endif; ?>
                                     </div>
                                     <div>
                                         <h3 class="font-medium text-black-custom">
@@ -189,8 +195,14 @@ $pending_requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <?php foreach ($pending_requests as $request): ?>
                             <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
                                 <div class="flex items-center space-x-4">
-                                    <div class="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center text-white font-bold">
-                                        <?php echo strtoupper(substr($request['FIRST_NAME'], 0, 1) . substr($request['LAST_NAME'], 0, 1)); ?>
+                                    <div class="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center text-white font-bold overflow-hidden">
+                                        <?php if ($request['PROFILE_IMG']): ?>
+                                            <img src="../static/images/<?php echo htmlspecialchars($request['PROFILE_IMG']); ?>" 
+                                                 alt="Profile Picture" 
+                                                 class="w-full h-full object-cover">
+                                        <?php else: ?>
+                                            <?php echo strtoupper(substr($request['FIRST_NAME'], 0, 1) . substr($request['LAST_NAME'], 0, 1)); ?>
+                                        <?php endif; ?>
                                     </div>
                                     <div>
                                         <h3 class="font-medium text-black-custom">

@@ -32,8 +32,14 @@ if (isset($_SESSION['user_id'])) {
                 <div class="flex items-center space-x-4">
                     <div class="relative">
                         <button id="profile-menu-button" class="flex items-center space-x-2 text-gray-600 hover:text-slate-custom transition-colors">
-                            <div class="w-8 h-8 bg-gradient-to-br from-slate-custom to-slate-700 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                <?php echo strtoupper(substr($user['FIRST_NAME'], 0, 1) . substr($user['LAST_NAME'], 0, 1)); ?>
+                            <div class="w-8 h-8 bg-gradient-to-br from-slate-custom to-slate-700 rounded-full flex items-center justify-center text-white font-bold text-sm overflow-hidden">
+                                <?php if ($user['PROFILE_IMG']): ?>
+                                    <img src="../static/images/<?php echo htmlspecialchars($user['PROFILE_IMG']); ?>" 
+                                         alt="Profile Picture" 
+                                         class="w-full h-full object-cover">
+                                <?php else: ?>
+                                    <?php echo strtoupper(substr($user['FIRST_NAME'], 0, 1) . substr($user['LAST_NAME'], 0, 1)); ?>
+                                <?php endif; ?>
                             </div>
                             <span class="text-sm font-medium"><?php echo htmlspecialchars($user['FIRST_NAME'] . ' ' . $user['LAST_NAME']); ?></span>
                             <i class="fas fa-chevron-down text-xs transition-transform duration-200" id="dropdown-arrow"></i>

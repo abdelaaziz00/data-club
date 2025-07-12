@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_event'])) {
 }
 
 // Fetch event registrations
-$registrations_sql = "SELECT r.*, m.FIRST_NAME, m.LAST_NAME, m.EMAIL
+$registrations_sql = "SELECT r.*, m.FIRST_NAME, m.LAST_NAME, m.EMAIL, m.PROFILE_IMG
                       FROM registre r 
                       JOIN member m ON r.ID_MEMBER = m.ID_MEMBER 
                       WHERE r.ID_EVENT = ? 
@@ -239,8 +239,14 @@ function formatDate($date) {
                                     <?php foreach ($registrations as $registration): ?>
                                         <tr class="hover:bg-gray-50 transition-colors">
                                             <td class="px-6 py-4 whitespace-nowrap flex items-center space-x-3">
-                                                <div class="w-10 h-10 bg-gradient-to-br from-slate-custom to-slate-700 rounded-full flex items-center justify-center text-white font-bold">
-                                                    <?= strtoupper(substr($registration['FIRST_NAME'], 0, 1) . substr($registration['LAST_NAME'], 0, 1)) ?>
+                                                <div class="w-10 h-10 bg-gradient-to-br from-slate-custom to-slate-700 rounded-full flex items-center justify-center text-white font-bold overflow-hidden">
+                                                    <?php if ($registration['PROFILE_IMG']): ?>
+                                                        <img src="../static/images/<?php echo htmlspecialchars($registration['PROFILE_IMG']); ?>" 
+                                                             alt="Profile Picture" 
+                                                             class="w-full h-full object-cover">
+                                                    <?php else: ?>
+                                                        <?= strtoupper(substr($registration['FIRST_NAME'], 0, 1) . substr($registration['LAST_NAME'], 0, 1)) ?>
+                                                    <?php endif; ?>
                                                 </div>
                                                 <span class="font-medium text-black-custom">
                                                     <?= htmlspecialchars($registration['FIRST_NAME'] . ' ' . $registration['LAST_NAME']) ?>
