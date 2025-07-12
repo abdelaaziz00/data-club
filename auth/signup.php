@@ -1,5 +1,13 @@
 <?php
+// Set session security parameters
+ini_set('session.cookie_httponly', 1);
+ini_set('session.use_only_cookies', 1);
+ini_set('session.cookie_secure', 0); // Set to 1 if using HTTPS
+ini_set('session.cookie_path', '/');
+ini_set('session.cookie_samesite', 'Strict');
+
 session_start();
+
 // Database config
 $servername = 'localhost';
 $username = 'root'; // Change if needed
@@ -10,71 +18,161 @@ $dbname = 'data_club';
 $message = '';
 $messageType = ''; // 'success' or 'error'
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $firstName = isset($_POST['firstName']) ? trim($_POST['firstName']) : '';
-    $lastName = isset($_POST['lastName']) ? trim($_POST['lastName']) : '';
-    $email = isset($_POST['email']) ? trim($_POST['email']) : '';
-    $password = isset($_POST['password']) ? trim($_POST['password']) : '';
-    $confirmPassword = isset($_POST['confirmPassword']) ? trim($_POST['confirmPassword']) : '';
+// Input validation and sanitization
+function validateInput($data) {
+    $data = trim($data);
+    $data = stripslashes($data);
+    $data = htmlspecialchars($data);
+    return $data;
+}
 
-    // Validation
-    if (!$firstName || !$lastName || !$email || !$password || !$confirmPassword) {
-        $message = 'Please fill in all fields.';
-        $messageType = 'error';
-    } elseif ($password !== $confirmPassword) {
-        $message = 'Passwords do not match.';
-        $messageType = 'error';
-    } elseif (strlen($password) < 6) {
-        $message = 'Password must be at least 6 characters long.';
-        $messageType = 'error';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $message = 'Please enter a valid email address.';
-        $messageType = 'error';
-    } else {
-        $conn = new mysqli($servername, $username, $db_password, $dbname);
-        if ($conn->connect_error) {
-            $message = 'Database connection failed: ' . $conn->connect_error;
-            $messageType = 'error';
-        } else {
+// Password strength validation
+function validatePassword($password) {
+    $errors = [];
+    
+    if (strlen($password) < 8) {
+        $errors[] = 'Too short! Need at least 8 characters.';
+    }
+    
+    if (!preg_match('/[A-Z]/', $password)) {
+        $errors[] = 'Missing uppercase letter (A-Z).';
+    }
+    
+    if (!preg_match('/[a-z]/', $password)) {
+        $errors[] = 'Missing lowercase letter (a-z).';
+    }
+    
+    if (!preg_match('/[0-9]/', $password)) {
+        $errors[] = 'Missing number (0-9).';
+    }
+    
+    if (!preg_match('/[^A-Za-z0-9]/', $password)) {
+        $errors[] = 'Missing special character (!@#$%^&*).';
+    }
+    
+    return $errors;
+}
+
+
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $firstName = isset($_POST['firstName']) ? validateInput($_POST['firstName']) : '';
+    $lastName = isset($_POST['lastName']) ? validateInput($_POST['lastName']) : '';
+    $email = isset($_POST['email']) ? validateInput($_POST['email']) : '';
+    $password = isset($_POST['password']) ? $_POST['password'] : ''; // Don't sanitize password for hashing
+    $confirmPassword = isset($_POST['confirmPassword']) ? $_POST['confirmPassword'] : '';
+
+    // Enhanced validation
+    $errors = [];
+    
+    // Check for empty fields
+    if (empty($firstName) || empty($lastName) || empty($email) || empty($password) || empty($confirmPassword)) {
+        $errors[] = 'Please fill in all fields.';
+    }
+    
+    // Validate email format
+    if (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = 'Please enter a valid email address.';
+    }
+    
+    // Validate name fields (only letters, spaces, and hyphens)
+    if (!empty($firstName) && !preg_match('/^[a-zA-Z\s\-]+$/', $firstName)) {
+        $errors[] = 'First name can only contain letters, spaces, and hyphens.';
+    }
+    
+    if (!empty($lastName) && !preg_match('/^[a-zA-Z\s\-]+$/', $lastName)) {
+        $errors[] = 'Last name can only contain letters, spaces, and hyphens.';
+    }
+    
+    // Validate name length
+    if (strlen($firstName) < 2 || strlen($firstName) > 50) {
+        $errors[] = 'First name must be between 2 and 50 characters.';
+    }
+    
+    if (strlen($lastName) < 2 || strlen($lastName) > 50) {
+        $errors[] = 'Last name must be between 2 and 50 characters.';
+    }
+    
+    // Password validation
+    if (!empty($password)) {
+        $password_errors = validatePassword($password);
+        $errors = array_merge($errors, $password_errors);
+    }
+    
+    // Check password confirmation
+    if ($password !== $confirmPassword) {
+        $errors[] = 'Passwords do not match.';
+    }
+    
+
+    
+    if (empty($errors)) {
+        try {
+            $conn = new mysqli($servername, $username, $db_password, $dbname);
+            if ($conn->connect_error) {
+                throw new Exception('Database connection failed: ' . $conn->connect_error);
+            }
+
+            // Set charset to prevent SQL injection
+            $conn->set_charset("utf8mb4");
+
             // Check if email already exists
-            $stmt = $conn->prepare('SELECT ID_MEMBER FROM member WHERE EMAIL = ?');
+            $stmt = $conn->prepare('SELECT ID_MEMBER FROM member WHERE EMAIL = ? LIMIT 1');
             if (!$stmt) {
-                $message = 'Prepare failed: ' . $conn->error;
+                throw new Exception('Prepare failed: ' . $conn->error);
+            }
+
+            $stmt->bind_param('s', $email);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            if ($result->num_rows > 0) {
+                $message = 'Email already exists. Please use a different email or try logging in.';
                 $messageType = 'error';
             } else {
-                $stmt->bind_param('s', $email);
-                $stmt->execute();
-                $result = $stmt->get_result();
+                // Hash the password securely
+                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
                 
-                if ($result->num_rows > 0) {
-                    $message = 'Email already exists. Please use a different email or try logging in.';
-                    $messageType = 'error';
-                } else {
-                    // Insert new member
-                    $stmt2 = $conn->prepare('INSERT INTO member (FIRST_NAME, LAST_NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)');
-                    if (!$stmt2) {
-                        $message = 'Prepare failed: ' . $conn->error;
-                        $messageType = 'error';
-                    } else {
-                        $stmt2->bind_param('ssss', $firstName, $lastName, $email, $password);
-                        if ($stmt2->execute()) {
-                            $inserted_id = $conn->insert_id;
-                            $message = 'Account created successfully! User ID: ' . $inserted_id . '. You can now log in.';
-                            $messageType = 'success';
-                            // Clear form data on success
-                            $firstName = $lastName = $email = '';
-                            header('Location: login.php');
-                        } else {
-                            $message = 'Registration failed: ' . $stmt2->error;
-                            $messageType = 'error';
-                        }
-                        $stmt2->close();
-                    }
+                // Insert new member with hashed password
+                $stmt2 = $conn->prepare('INSERT INTO member (FIRST_NAME, LAST_NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)');
+                if (!$stmt2) {
+                    throw new Exception('Prepare failed: ' . $conn->error);
                 }
-                $stmt->close();
+
+                $stmt2->bind_param('ssss', $firstName, $lastName, $email, $hashed_password);
+                if ($stmt2->execute()) {
+                    $inserted_id = $conn->insert_id;
+                    $message = 'Account created successfully! You can now log in.';
+                    $messageType = 'success';
+                    
+                    // Clear form data on success
+                    $firstName = $lastName = $email = '';
+                    
+                    // Redirect to login page after a short delay
+                    header('Refresh: 2; URL=login.php');
+                } else {
+                    throw new Exception('Registration failed: ' . $stmt2->error);
+                }
+                $stmt2->close();
             }
+            $stmt->close();
             $conn->close();
+            
+        } catch (Exception $e) {
+            $message = 'An error occurred during registration. Please try again later.';
+            $messageType = 'error';
+            error_log('Signup error: ' . $e->getMessage());
         }
+    } else {
+        // Create a more user-friendly error message
+        if (count($errors) === 1) {
+            $message = $errors[0];
+        } elseif (count($errors) <= 3) {
+            $message = 'Password needs: ' . implode(', ', $errors);
+        } else {
+            $message = 'Password needs: ' . implode(', ', array_slice($errors, 0, 2)) . ' and ' . (count($errors) - 2) . ' more requirements.';
+        }
+        $messageType = 'error';
     }
 }
 ?>
@@ -214,6 +312,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     name="password"
                                     type="password"
                                     required
+                                    onkeyup="checkPasswordStrength(this.value)"
                                     class="block w-full pl-10 pr-12 py-3 border border-brand-slate/20 rounded-lg text-brand-dark placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent transition-all duration-300"
                                     placeholder="••••••••"
                                 />
@@ -227,6 +326,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                     </svg>
                                 </button>
+                            </div>
+                            <!-- Password Strength Indicator -->
+                            <div id="passwordStrength" class="mt-2 text-xs">
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <span class="text-brand-slate">Password strength:</span>
+                                    <div class="flex-1 h-2 rounded bg-gray-200 overflow-hidden relative w-40">
+                                        <div id="strengthBar" class="h-2 rounded transition-all duration-300" style="width:0%; background:linear-gradient(90deg,#f87171,#fbbf24,#facc15,#4ade80,#22c55e);"></div>
+                                    </div>
+                                    <span id="strengthText" class="font-medium ml-2">Start typing...</span>
+                                </div>
+                                <ul class="space-y-1 mt-2">
+                                    <li class="flex items-center"><span id="lengthIcon" class="mr-2 text-gray-400">✗</span> <span class="text-gray-700">8+ characters</span></li>
+                                    <li class="flex items-center"><span id="uppercaseIcon" class="mr-2 text-gray-400">✗</span> <span class="text-gray-700">Uppercase letter (A-Z)</span></li>
+                                    <li class="flex items-center"><span id="lowercaseIcon" class="mr-2 text-gray-400">✗</span> <span class="text-gray-700">Lowercase letter (a-z)</span></li>
+                                    <li class="flex items-center"><span id="numberIcon" class="mr-2 text-gray-400">✗</span> <span class="text-gray-700">Number (0-9)</span></li>
+                                    <li class="flex items-center"><span id="specialIcon" class="mr-2 text-gray-400">✗</span> <span class="text-gray-700">Special character (!@#$...)</span></li>
+                                </ul>
                             </div>
                         </div>
 
@@ -381,6 +497,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         function goBack() {
             // You can customize this function to redirect to your homepage
             window.location.href = '../index.html';
+        }
+
+        function checkPasswordStrength(password) {
+            const strengthBar = document.getElementById('strengthBar');
+            const strengthText = document.getElementById('strengthText');
+            const lengthIcon = document.getElementById('lengthIcon');
+            const uppercaseIcon = document.getElementById('uppercaseIcon');
+            const lowercaseIcon = document.getElementById('lowercaseIcon');
+            const numberIcon = document.getElementById('numberIcon');
+            const specialIcon = document.getElementById('specialIcon');
+
+            // Check each requirement
+            const hasLength = password.length >= 8;
+            const hasUppercase = /[A-Z]/.test(password);
+            const hasLowercase = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            const hasSpecial = /[^A-Za-z0-9]/.test(password);
+
+            // Update checklist icons
+            lengthIcon.textContent = hasLength ? '✓' : '✗';
+            lengthIcon.className = hasLength ? 'mr-2 text-green-500 font-bold' : 'mr-2 text-gray-400';
+            uppercaseIcon.textContent = hasUppercase ? '✓' : '✗';
+            uppercaseIcon.className = hasUppercase ? 'mr-2 text-green-500 font-bold' : 'mr-2 text-gray-400';
+            lowercaseIcon.textContent = hasLowercase ? '✓' : '✗';
+            lowercaseIcon.className = hasLowercase ? 'mr-2 text-green-500 font-bold' : 'mr-2 text-gray-400';
+            numberIcon.textContent = hasNumber ? '✓' : '✗';
+            numberIcon.className = hasNumber ? 'mr-2 text-green-500 font-bold' : 'mr-2 text-gray-400';
+            specialIcon.textContent = hasSpecial ? '✓' : '✗';
+            specialIcon.className = hasSpecial ? 'mr-2 text-green-500 font-bold' : 'mr-2 text-gray-400';
+
+            // Calculate strength
+            const checks = [hasLength, hasUppercase, hasLowercase, hasNumber, hasSpecial];
+            const passedChecks = checks.filter(check => check).length;
+            const percent = (passedChecks / 5) * 100;
+            strengthBar.style.width = percent + '%';
+            strengthBar.style.background =
+                percent < 40 ? '#f87171' :
+                percent < 60 ? '#fbbf24' :
+                percent < 80 ? '#facc15' :
+                percent < 100 ? '#4ade80' : '#22c55e';
+
+            // Update strength text
+            if (password.length === 0) {
+                strengthText.textContent = 'Start typing...';
+                strengthText.className = 'font-medium text-gray-400 ml-2';
+            } else if (passedChecks === 0) {
+                strengthText.textContent = 'Very Weak';
+                strengthText.className = 'font-medium text-red-500 ml-2';
+            } else if (passedChecks <= 2) {
+                strengthText.textContent = 'Weak';
+                strengthText.className = 'font-medium text-orange-500 ml-2';
+            } else if (passedChecks <= 3) {
+                strengthText.textContent = 'Fair';
+                strengthText.className = 'font-medium text-yellow-500 ml-2';
+            } else if (passedChecks <= 4) {
+                strengthText.textContent = 'Good';
+                strengthText.className = 'font-medium text-blue-500 ml-2';
+            } else {
+                strengthText.textContent = 'Strong';
+                strengthText.className = 'font-medium text-green-500 ml-2';
+            }
         }
     </script>
 </body>

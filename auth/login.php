@@ -4,6 +4,7 @@ ini_set('session.cookie_httponly', 1);
 ini_set('session.use_only_cookies', 1);
 ini_set('session.cookie_secure', 0); // Set to 1 if using HTTPS
 ini_set('session.cookie_path', '/'); // Ensure session is available across all directories
+ini_set('session.cookie_samesite', 'Strict'); // Prevent CSRF attacks
 
 // Start session with secure settings
 session_start();
@@ -18,88 +19,136 @@ $dbname = 'data_club';
 $message = '';
 $messageType = ''; // 'success' or 'error'
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = isset($_POST['email']) ? trim($_POST['email']) : '';
-    $pass = isset($_POST['password']) ? trim($_POST['password']) : '';
 
-    if ($email && $pass) {
-        $conn = new mysqli($servername, $username, $password, $dbname);
-        if ($conn->connect_error) {
-            $message = 'Database connection failed: ' . $conn->connect_error;
-            $messageType = 'error';
-        } else {
-            // Check admin table
-            $stmt = $conn->prepare('SELECT ID_ADMIN, FIRST_NAME, LAST_NAME, PASSWORD FROM admin WHERE EMAIL = ?');
-            if (!$stmt) {
-                $message = 'Prepare failed (admin): ' . $conn->error;
-                $messageType = 'error';
-            } else {
+
+// Input validation and sanitization
+function validateInput($data) {
+    $data = trim($data);
+    $data = stripslashes($data);
+    $data = htmlspecialchars($data);
+    return $data;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $email = isset($_POST['email']) ? validateInput($_POST['email']) : '';
+    $pass = isset($_POST['password']) ? $_POST['password'] : ''; // Don't sanitize password for hashing
+
+    // Validate email format
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $message = 'Please enter a valid email address.';
+        $messageType = 'error';
+    } elseif (empty($pass)) {
+        $message = 'Please enter your password.';
+        $messageType = 'error';
+    } else {
+            try {
+                $conn = new mysqli($servername, $username, $password, $dbname);
+                if ($conn->connect_error) {
+                    throw new Exception('Database connection failed: ' . $conn->connect_error);
+                }
+
+                // Set charset to prevent SQL injection
+                $conn->set_charset("utf8mb4");
+
+                // Check admin table first
+                $stmt = $conn->prepare('SELECT ID_ADMIN, FIRST_NAME, LAST_NAME, PASSWORD FROM admin WHERE EMAIL = ? LIMIT 1');
+                if (!$stmt) {
+                    throw new Exception('Prepare failed (admin): ' . $conn->error);
+                }
+
                 $stmt->bind_param('s', $email);
                 $stmt->execute();
                 $result = $stmt->get_result();
+                
                 if ($row = $result->fetch_assoc()) {
-                    if ($row['PASSWORD'] === $pass) {
+                    // Check if password is hashed or plain text
+                    if (password_verify($pass, $row['PASSWORD']) || $row['PASSWORD'] === $pass) {
+                        // If password was plain text, hash it for future use
+                        if ($row['PASSWORD'] === $pass) {
+                            $hashed_password = password_hash($pass, PASSWORD_DEFAULT);
+                            $update_stmt = $conn->prepare('UPDATE admin SET PASSWORD = ? WHERE ID_ADMIN = ?');
+                            $update_stmt->bind_param('si', $hashed_password, $row['ID_ADMIN']);
+                            $update_stmt->execute();
+                            $update_stmt->close();
+                        }
+                        
                         // Regenerate session ID for security
                         session_regenerate_id(true);
                         $_SESSION['user_id'] = $row['ID_ADMIN'];
-                        $_SESSION['first_name'] = $row['FIRST_NAME'] ;
-                        $_SESSION['last_name'] = $row['LAST_NAME'] ;
+                        $_SESSION['first_name'] = $row['FIRST_NAME'];
+                        $_SESSION['last_name'] = $row['LAST_NAME'];
                         $_SESSION['privilege'] = 1;
                         $_SESSION['login_time'] = time();
+                        $_SESSION['last_activity'] = time();
+                        
                         $message = 'Admin login successful! Redirecting...';
                         $messageType = 'success';
+                        
                         // Redirect to admin dashboard
                         header('Location: ../admin/dashboard.php');
                         exit();
                     } else {
-                        $message = 'Invalid password.';
+                        $message = 'Invalid email or password.';
                         $messageType = 'error';
                     }
                 } else {
-                    // Not found in admin, check member
-                    $stmt2 = $conn->prepare('SELECT ID_MEMBER, FIRST_NAME, LAST_NAME, PASSWORD FROM member WHERE EMAIL = ?');
+                    // Not found in admin, check member table
+                    $stmt2 = $conn->prepare('SELECT ID_MEMBER, FIRST_NAME, LAST_NAME, PASSWORD FROM member WHERE EMAIL = ? LIMIT 1');
                     if (!$stmt2) {
-                        $message = 'Prepare failed (member): ' . $conn->error;
-                        $messageType = 'error';
-                    } else {
-                        $stmt2->bind_param('s', $email);
-                        $stmt2->execute();
-                        $result2 = $stmt2->get_result();
-                        if ($row2 = $result2->fetch_assoc()) {
+                        throw new Exception('Prepare failed (member): ' . $conn->error);
+                    }
+
+                    $stmt2->bind_param('s', $email);
+                    $stmt2->execute();
+                    $result2 = $stmt2->get_result();
+                    
+                    if ($row2 = $result2->fetch_assoc()) {
+                        // Check if password is hashed or plain text
+                        if (password_verify($pass, $row2['PASSWORD']) || $row2['PASSWORD'] === $pass) {
+                            // If password was plain text, hash it for future use
                             if ($row2['PASSWORD'] === $pass) {
-                                // Regenerate session ID for security
-                                session_regenerate_id(true);
-                                $_SESSION['user_id'] = $row2['ID_MEMBER'];
-                                $_SESSION['first_name'] = $row2['FIRST_NAME'] ;
-                                $_SESSION['last_name'] = $row2['LAST_NAME'] ;
-                                $_SESSION['privilege'] = 2;
-                                $_SESSION['login_time'] = time();
-                                $message = 'Member login successful! Redirecting...';
-                                $messageType = 'success';
-                                
-                                // Redirect to member dashboard
-                                header('Location: ../user/home.php');
-                                exit();
-                            } else {
-                                $message = 'Invalid password.';
-                                $messageType = 'error';
+                                $hashed_password = password_hash($pass, PASSWORD_DEFAULT);
+                                $update_stmt = $conn->prepare('UPDATE member SET PASSWORD = ? WHERE ID_MEMBER = ?');
+                                $update_stmt->bind_param('si', $hashed_password, $row2['ID_MEMBER']);
+                                $update_stmt->execute();
+                                $update_stmt->close();
                             }
+                            
+                            // Regenerate session ID for security
+                            session_regenerate_id(true);
+                            $_SESSION['user_id'] = $row2['ID_MEMBER'];
+                            $_SESSION['first_name'] = $row2['FIRST_NAME'];
+                            $_SESSION['last_name'] = $row2['LAST_NAME'];
+                            $_SESSION['privilege'] = 2;
+                            $_SESSION['login_time'] = time();
+                            $_SESSION['last_activity'] = time();
+                            
+                                                    $message = 'Member login successful! Redirecting...';
+                            $messageType = 'success';
+                            
+                            // Redirect to member dashboard
+                            header('Location: ../user/home.php');
+                            exit();
                         } else {
-                            $message = 'User not found.';
+                            $message = 'Invalid email or password.';
                             $messageType = 'error';
                         }
-                        $stmt2->close();
+                    } else {
+                        $message = 'Invalid email or password.';
+                        $messageType = 'error';
                     }
+                    $stmt2->close();
                 }
                 $stmt->close();
+                $conn->close();
+                
+            } catch (Exception $e) {
+                $message = 'An error occurred. Please try again later.';
+                $messageType = 'error';
+                error_log('Login error: ' . $e->getMessage());
             }
-            $conn->close();
         }
-    } else {
-        $message = 'Please enter both email and password.';
-        $messageType = 'error';
     }
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -146,6 +195,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php if ($message): ?>
                     <div class="mb-6 p-4 rounded-lg <?php echo $messageType === 'success' ? 'bg-green-100 border border-green-400 text-green-700' : 'bg-red-100 border border-red-400 text-red-700'; ?>">
                         <?php echo htmlspecialchars($message); ?>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Logout Success Message -->
+                <?php if (isset($_GET['logout']) && $_GET['logout'] == '1'): ?>
+                    <div class="mb-6 p-4 rounded-lg bg-blue-100 border border-blue-400 text-blue-700">
+                        You have been successfully logged out.
+                    </div>
+                <?php endif; ?>
+
+                <!-- Session Timeout Message -->
+                <?php if (isset($_GET['timeout']) && $_GET['timeout'] == '1'): ?>
+                    <div class="mb-6 p-4 rounded-lg bg-yellow-100 border border-yellow-400 text-yellow-700">
+                        Your session has expired. Please log in again.
                     </div>
                 <?php endif; ?>
 
@@ -219,7 +282,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         <!-- Additional Links -->
                         <div class="text-center">
-                            <a href="#" class="text-sm text-brand-slate hover:text-brand-red transition-colors font-medium">
+                            <a href="forgot_password.php" class="text-sm text-brand-slate hover:text-brand-red transition-colors font-medium">
                                 Forgot your password?
                             </a>
                         </div>

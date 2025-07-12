@@ -10,6 +10,11 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
+// Fetch user information first (needed for profile picture operations)
+$stmt = $pdo->prepare("SELECT * FROM member WHERE ID_MEMBER = ?");
+$stmt->execute([$user_id]);
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
+
 // Handle profile picture upload
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_profile_picture'])) {
     $upload_dir = '../static/images/';
@@ -113,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['remove_profile_pictur
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
-// Handle profile update
+// Handle profile update with password hashing
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     $first_name = $_POST['first_name'];
     $last_name = $_POST['last_name'];
@@ -121,14 +126,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     $password = !empty($_POST['password']) ? $_POST['password'] : null;
     
     if ($password) {
+        // Hash the password using the new system
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
         $stmt = $pdo->prepare("UPDATE member SET FIRST_NAME = ?, LAST_NAME = ?, EMAIL = ?, PASSWORD = ? WHERE ID_MEMBER = ?");
-        $stmt->execute([$first_name, $last_name, $email, $password, $user_id]);
+        $stmt->execute([$first_name, $last_name, $email, $hashed_password, $user_id]);
     } else {
         $stmt = $pdo->prepare("UPDATE member SET FIRST_NAME = ?, LAST_NAME = ?, EMAIL = ? WHERE ID_MEMBER = ?");
         $stmt->execute([$first_name, $last_name, $email, $user_id]);
     }
     
     $success_message = "Profile updated successfully!";
+    
+    // Refresh user data
+    $stmt = $pdo->prepare("SELECT * FROM member WHERE ID_MEMBER = ?");
+    $stmt->execute([$user_id]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
 // Handle club creation request
@@ -177,11 +189,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['withdraw_request'])) 
     $stmt->execute([$user_id, $club_id]);
     $withdraw_message = "Request withdrawn successfully!";
 }
-
-// Fetch user information
-$stmt = $pdo->prepare("SELECT * FROM member WHERE ID_MEMBER = ?");
-$stmt->execute([$user_id]);
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 // Check if user has a club (is a club owner)
 $my_club = null;

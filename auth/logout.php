@@ -1,11 +1,16 @@
 <?php
-// Start the session
-session_start();
+// Include session security functions
+require_once '../includes/session_security.php';
 
-// Destroy all session data
-session_destroy();
+// Log the logout event
+if (isLoggedIn()) {
+    logSecurityEvent('user_logout', getCurrentUserId(), 'User logged out successfully');
+}
 
-// Redirect to home page
-header("Location: ../user/home.php");
+// Perform secure logout
+logout();
+
+// Redirect to login page with success message
+header('Location: login.php?logout=1');
 exit();
 ?> 
