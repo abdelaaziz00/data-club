@@ -52,12 +52,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_logo'])) {
         // Check if file is an image
         $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif'];
         if (in_array($file_extension, $allowed_extensions)) {
+            // Get current logo name from database BEFORE uploading new one
+            $stmt = $pdo->prepare("SELECT LOGO FROM club WHERE ID_CLUB = ?");
+            $stmt->execute([$club['ID_CLUB']]);
+            $current_logo = $stmt->fetch(PDO::FETCH_ASSOC)['LOGO'];
+            
+            // Delete old logo file from images folder if it exists
+            if ($current_logo && !empty($current_logo)) {
+                $old_logo_path = '../static/images/' . $current_logo;
+                if (file_exists($old_logo_path)) {
+                    unlink($old_logo_path);
+                }
+            }
+            
             // Use original filename
             $new_filename = $original_filename;
             $upload_path = $upload_dir . $new_filename;
             
             if (move_uploaded_file($_FILES['logo']['tmp_name'], $upload_path)) {
-                // Update database with logo filename
+                // Update database with new logo filename
                 $stmt = $pdo->prepare("UPDATE club SET LOGO = ? WHERE ID_CLUB = ?");
                 $stmt->execute([$new_filename, $club['ID_CLUB']]);
                 
@@ -100,22 +113,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_club'])) {
         // Check if file is an image
         $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif'];
         if (in_array($file_extension, $allowed_extensions)) {
+            // Get current logo name from database BEFORE uploading new one
+            $stmt = $pdo->prepare("SELECT LOGO FROM club WHERE ID_CLUB = ?");
+            $stmt->execute([$club['ID_CLUB']]);
+            $current_logo = $stmt->fetch(PDO::FETCH_ASSOC)['LOGO'];
+            
+            // Delete old logo file from images folder if it exists
+            if ($current_logo && !empty($current_logo)) {
+                $old_logo_path = '../static/images/' . $current_logo;
+                if (file_exists($old_logo_path)) {
+                    unlink($old_logo_path);
+                }
+            }
+            
             // Use original filename or generate unique one if needed
             $new_filename = $original_filename;
             $upload_path = $upload_dir . $new_filename;
             
             if (move_uploaded_file($_FILES['logo']['tmp_name'], $upload_path)) {
-                // Delete old logo file if it exists
-                if ($club['LOGO'] && !empty($club['LOGO'])) {
-                    $old_logo_path = $upload_dir . $club['LOGO'];
-                    if (file_exists($old_logo_path)) {
-                        $delete_result = unlink($old_logo_path);
-                        if (!$delete_result) {
-                            $error_message = "Warning: Could not delete old logo file.";
-                        }
-                    }
-                }
-                
                 $logo_filename = $new_filename;  // Save only filename to database
                 $success_message = "Club information and logo updated successfully!";
             } else {

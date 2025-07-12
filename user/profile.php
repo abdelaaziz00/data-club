@@ -10,6 +10,11 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
+// Fetch user information first
+$stmt = $pdo->prepare("SELECT * FROM member WHERE ID_MEMBER = ?");
+$stmt->execute([$user_id]);
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
+
 // Handle profile update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     $first_name = $_POST['first_name'];
@@ -17,15 +22,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     $email = $_POST['email'];
     $password = !empty($_POST['password']) ? $_POST['password'] : null;
     
-    if ($password) {
-        $stmt = $pdo->prepare("UPDATE member SET FIRST_NAME = ?, LAST_NAME = ?, EMAIL = ?, PASSWORD = ? WHERE ID_MEMBER = ?");
-        $stmt->execute([$first_name, $last_name, $email, $password, $user_id]);
-    } else {
-        $stmt = $pdo->prepare("UPDATE member SET FIRST_NAME = ?, LAST_NAME = ?, EMAIL = ? WHERE ID_MEMBER = ?");
-        $stmt->execute([$first_name, $last_name, $email, $user_id]);
+    // Handle profile image upload
+    $profile_img_filename = $user['PROFILE_IMG']; // Keep existing profile image filename by default
+    
+    if (isset($_FILES['profile_img']) && $_FILES['profile_img']['error'] === UPLOAD_ERR_OK) {
+        $upload_dir = '../static/images/';
+        $original_filename = $_FILES['profile_img']['name'];
+        $file_extension = strtolower(pathinfo($original_filename, PATHINFO_EXTENSION));
+        
+        // Check if file is an image
+        $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif'];
+        if (in_array($file_extension, $allowed_extensions)) {
+            // Get current profile image name from database BEFORE uploading new one
+            $stmt = $pdo->prepare("SELECT PROFILE_IMG FROM member WHERE ID_MEMBER = ?");
+            $stmt->execute([$user_id]);
+            $current_profile_img = $stmt->fetch(PDO::FETCH_ASSOC)['PROFILE_IMG'];
+            
+            // Delete old profile image file from images folder if it exists
+            if ($current_profile_img && !empty($current_profile_img)) {
+                $old_profile_img_path = '../static/images/' . $current_profile_img;
+                if (file_exists($old_profile_img_path)) {
+                    unlink($old_profile_img_path);
+                }
+            }
+            
+            // Use original filename
+            $new_filename = $original_filename;
+            $upload_path = $upload_dir . $new_filename;
+            
+            if (move_uploaded_file($_FILES['profile_img']['tmp_name'], $upload_path)) {
+                $profile_img_filename = $new_filename;  // Save only filename to database
+                $success_message = "Profile information and image updated successfully!";
+            } else {
+                $error_message = "Failed to upload profile image. Please try again.";
+            }
+        } else {
+            $error_message = "Invalid file type. Please upload JPG, PNG, or GIF files only.";
+        }
     }
     
-    $success_message = "Profile updated successfully!";
+    // Update database
+    if ($password) {
+        $stmt = $pdo->prepare("UPDATE member SET FIRST_NAME = ?, LAST_NAME = ?, EMAIL = ?, PASSWORD = ?, PROFILE_IMG = ? WHERE ID_MEMBER = ?");
+        $stmt->execute([$first_name, $last_name, $email, $password, $profile_img_filename, $user_id]);
+    } else {
+        $stmt = $pdo->prepare("UPDATE member SET FIRST_NAME = ?, LAST_NAME = ?, EMAIL = ?, PROFILE_IMG = ? WHERE ID_MEMBER = ?");
+        $stmt->execute([$first_name, $last_name, $email, $profile_img_filename, $user_id]);
+    }
+    
+    if (!isset($success_message)) {
+        $success_message = "Profile updated successfully!";
+    }
+    
+    // Refresh user data
+    $stmt = $pdo->prepare("SELECT * FROM member WHERE ID_MEMBER = ?");
+    $stmt->execute([$user_id]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
 // Handle club creation request
@@ -55,11 +107,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['withdraw_request'])) 
     $stmt->execute([$user_id, $club_id]);
     $withdraw_message = "Request withdrawn successfully!";
 }
-
-// Fetch user information
-$stmt = $pdo->prepare("SELECT * FROM member WHERE ID_MEMBER = ?");
-$stmt->execute([$user_id]);
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 // Check if user has a club (is a club owner)
 $my_club = null;
@@ -140,6 +187,13 @@ $member_since = "January 2023"; // You might want to add a registration_date col
             </div>
         <?php endif; ?>
 
+        <!-- Error Messages -->
+        <?php if (isset($error_message)): ?>
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                <?php echo $error_message; ?>
+            </div>
+        <?php endif; ?>
+
         <?php if (isset($club_request_message)): ?>
             <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4">
                 <?php echo $club_request_message; ?>
@@ -158,9 +212,15 @@ $member_since = "January 2023"; // You might want to add a registration_date col
                 <div class="absolute -bottom-16 left-8">
                     <div class="relative">
                         <div class="w-32 h-32 bg-white rounded-full p-2 shadow-lg">
-                            <div class="w-full h-full bg-gradient-to-br from-slate-custom to-slate-700 rounded-full flex items-center justify-center text-white font-bold text-4xl">
-                                <?php echo strtoupper(substr($user['FIRST_NAME'], 0, 1) . substr($user['LAST_NAME'], 0, 1)); ?>
-                            </div>
+                            <?php if ($user['PROFILE_IMG'] && !empty($user['PROFILE_IMG'])): ?>
+                                <img src="../static/images/<?php echo htmlspecialchars($user['PROFILE_IMG']); ?>" 
+                                     alt="Profile Image" 
+                                     class="w-full h-full rounded-full object-cover">
+                            <?php else: ?>
+                                <div class="w-full h-full bg-gradient-to-br from-slate-custom to-slate-700 rounded-full flex items-center justify-center text-white font-bold text-4xl">
+                                    <?php echo strtoupper(substr($user['FIRST_NAME'], 0, 1) . substr($user['LAST_NAME'], 0, 1)); ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
                         <button class="absolute bottom-2 right-2 w-8 h-8 bg-red-custom text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors">
                             <i class="fas fa-camera text-sm"></i>
@@ -223,8 +283,14 @@ $member_since = "January 2023"; // You might want to add a registration_date col
                             <?php foreach ($clubs_part_of as $club): ?>
                                 <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                                     <div class="flex items-center space-x-3">
-                                        <div class="w-12 h-12 bg-gradient-to-br from-slate-custom to-slate-700 rounded-lg flex items-center justify-center text-white font-bold">
-                                            <?php echo strtoupper(substr($club['NAME'], 0, 2)); ?>
+                                        <div class="w-12 h-12 bg-gradient-to-br from-slate-custom to-slate-700 rounded-lg flex items-center justify-center text-white font-bold overflow-hidden">
+                                            <?php if ($club['LOGO'] && !empty($club['LOGO'])): ?>
+                                                <img src="../static/images/<?php echo htmlspecialchars($club['LOGO']); ?>" 
+                                                     alt="Club Logo" 
+                                                     class="w-full h-full object-cover">
+                                            <?php else: ?>
+                                                <?php echo strtoupper(substr($club['NAME'], 0, 2)); ?>
+                                            <?php endif; ?>
                                         </div>
                                         <div class="flex-1">
                                             <h3 class="font-medium text-black-custom"><?php echo htmlspecialchars($club['NAME']); ?></h3>
@@ -265,8 +331,14 @@ $member_since = "January 2023"; // You might want to add a registration_date col
                         
                         <div class="p-6">
                             <div class="flex items-start space-x-6 mb-6">
-                                <div class="w-20 h-20 bg-gradient-to-br from-slate-custom to-slate-700 rounded-xl flex items-center justify-center text-white font-bold text-2xl">
-                                    <?php echo strtoupper(substr($my_club['NAME'], 0, 2)); ?>
+                                <div class="w-20 h-20 bg-gradient-to-br from-slate-custom to-slate-700 rounded-xl flex items-center justify-center text-white font-bold text-2xl overflow-hidden">
+                                    <?php if ($my_club['LOGO'] && !empty($my_club['LOGO'])): ?>
+                                        <img src="../static/images/<?php echo htmlspecialchars($my_club['LOGO']); ?>" 
+                                             alt="Club Logo" 
+                                             class="w-full h-full object-cover">
+                                    <?php else: ?>
+                                        <?php echo strtoupper(substr($my_club['NAME'], 0, 2)); ?>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="flex-1">
                                     <h3 class="text-2xl font-bold text-black-custom mb-2"><?php echo htmlspecialchars($my_club['NAME']); ?></h3>
@@ -442,7 +514,27 @@ $member_since = "January 2023"; // You might want to add a registration_date col
                     </button>
                 </div>
                 
-                <form method="POST" class="space-y-4">
+                <form method="POST" enctype="multipart/form-data" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Profile Image</label>
+                        <div class="flex items-center space-x-4">
+                            <div class="w-16 h-16 rounded-full overflow-hidden bg-gray-100">
+                                <?php if ($user['PROFILE_IMG'] && !empty($user['PROFILE_IMG'])): ?>
+                                    <img src="../static/images/<?php echo htmlspecialchars($user['PROFILE_IMG']); ?>" 
+                                         alt="Current Profile Image" 
+                                         class="w-full h-full object-cover">
+                                <?php else: ?>
+                                    <div class="w-full h-full bg-gradient-to-br from-slate-custom to-slate-700 flex items-center justify-center text-white font-bold text-lg">
+                                        <?php echo strtoupper(substr($user['FIRST_NAME'], 0, 1) . substr($user['LAST_NAME'], 0, 1)); ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="flex-1">
+                                <input type="file" name="profile_img" accept="image/*" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom">
+                                <p class="text-xs text-gray-500 mt-1">Upload JPG, PNG, or GIF (max 5MB)</p>
+                            </div>
+                        </div>
+                    </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
                         <input type="text" name="first_name" value="<?php echo htmlspecialchars($user['FIRST_NAME']); ?>" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-custom" required>
