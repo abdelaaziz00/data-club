@@ -735,6 +735,46 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_events') {
         });
     </script>
 
+    <!-- Footer -->
+    <footer class="bg-brand-red text-white py-16 px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="animated-border h-1 mb-12 rounded-full"></div>
+            
+            <div class="flex flex-col items-center mb-12">
+                <div class="flex items-center space-x-3 mb-8">
+                    <img src="../static/images/Frame 13.png" alt="MDS Logo" class="w-40 h-30 object-contain mix-blend-multiply">
+                </div>
+                
+                <div class="flex flex-wrap justify-center gap-8 mb-8">
+                    <a href="#" class="text-white/80 hover:text-white transition-colors underline-animate">Home Page</a>
+                    <a href="#" class="text-white/80 hover:text-white transition-colors underline-animate">Events List</a>
+                    <a href="#" class="text-white/80 hover:text-white transition-colors underline-animate">Clubs List</a>
+                    <a href="#" class="text-white/80 hover:text-white transition-colors underline-animate">Contact Us</a>
+                </div>
+                
+                <div class="flex space-x-8">
+                    <a href="#" class="text-white/80 hover:text-white transition-all duration-300 hover:scale-110">
+                        <i class="fab fa-instagram text-2xl"></i>
+                    </a>
+                    <a href="#" class="text-white/80 hover:text-white transition-all duration-300 hover:scale-110">
+                        <i class="fab fa-linkedin text-2xl"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="border-t border-white/20 pt-8">
+                <div class="flex flex-col md:flex-row justify-between items-center text-sm">
+                    <p class="text-white/80 mb-4 md:mb-0">© 2025 DataClub. All rights reserved.</p>
+                    <div class="flex flex-wrap gap-6">
+                        <a href="#" class="text-white/80 hover:text-white transition-colors underline-animate">Privacy Policy</a>
+                        <a href="#" class="text-white/80 hover:text-white transition-colors underline-animate">Terms of Service</a>
+                        <a href="#" class="text-white/80 hover:text-white transition-colors underline-animate">Cookie Settings</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
     <style>
         @keyframes fadeInUp {
             from {
@@ -794,6 +834,39 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_events') {
         
         .scale-on-hover:hover {
             transform: scale(1.05);
+        }
+
+        /* Animated border */
+        .animated-border {
+            position: relative;
+            background: linear-gradient(90deg, #F05454, #30475E, #F05454);
+            background-size: 200% 100%;
+            animation: borderFlow 3s ease-in-out infinite;
+        }
+        
+        @keyframes borderFlow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        /* Animated underline */
+        .underline-animate {
+            position: relative;
+        }
+        
+        .underline-animate::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 0;
+            background: linear-gradient(90deg, #F05454, #30475E);
+            transition: width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        .underline-animate:hover::after {
+            width: 100%;
         }
     </style>
 </body>

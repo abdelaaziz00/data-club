@@ -14,11 +14,11 @@ if (isset($_SESSION['user_id'])) {
 }
 ?>
 
-<header class="bg-white py-4 px-6 shadow-sm">
+<header class="bg-white py-0 px-6 shadow-sm">
     <div class="max-w-7xl mx-auto flex items-center justify-between">
         <!-- Logo -->
         <div class="flex items-center space-x-3">
-            <img src="../static/images/mds logo.png" alt="MDS Logo" class="w-40 h-30 object-contain">
+            <img src="../static/images/Frame 13.png" alt="MDS Logo" class="w-48 h-42 object-contain">
         </div>
 
         <!-- Navigation -->

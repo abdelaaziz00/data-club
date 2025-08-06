@@ -393,7 +393,7 @@ require_once 'db.php';
             <!-- Logo and Links -->
             <div class="flex flex-col items-center mb-8">
                 <div class="flex items-center space-x-3 mb-6">
-                    <img src="mds logo.png" alt="MDS Logo" class="w-40 h-30 object-contain">
+                    <img src="../static/images/Frame 13.png" alt="MDS Logo" class="w-40 h-30 object-contain mix-blend-multiply">
                 </div>
 
                 <!-- Navigation Links -->
